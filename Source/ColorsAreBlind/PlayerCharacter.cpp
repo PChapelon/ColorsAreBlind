@@ -20,6 +20,7 @@ void APlayerCharacter::BeginPlay()
 	if(GEngine)
       GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Some debug message!")); 
 	UE_LOG(LogTemp, Warning, TEXT("Hello there i m a sphere") );
+	
 }
 
 // Called every frame
