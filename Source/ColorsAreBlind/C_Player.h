@@ -12,28 +12,26 @@ class COLORSAREBLIND_API AC_Player : public APawn
 {
 	GENERATED_BODY()
 
+
+	
+
 public:
-	// Sets default values for this pawn's properties
-	AC_Player();
-	~AC_Player();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		float m_speedMovement;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		float m_angleRotation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		float m_speedRotation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Location")
 		FVector NewLocation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Location")
 		FQuat NewRotation;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+		class USpringArmComponent* m_springArmCamera;
+		class UCameraComponent* m_camera;
 
-
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Model")
+		class UStaticMeshComponent* m_playerMesh;
 
 
 protected:
@@ -43,6 +41,9 @@ protected:
 	FVector m_currentVelocity;
 
 public:	
+	// Sets default values for this pawn's properties
+	AC_Player();
+	~AC_Player();
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 

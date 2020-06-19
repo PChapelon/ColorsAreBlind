@@ -4,24 +4,61 @@
 #include "Components/SphereComponent.h"
 #include "string"
 #include "Camera/CameraComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 
 #include "C_Player.h"
 
 // Sets default values
-AC_Player::AC_Player(): m_speedMovement(10.0f)
+AC_Player::AC_Player() : m_speedMovement(10.0f)
 {
- 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
-	// Create a dummy root component we can attach things to.
-	/*RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("MyRootComponent"));
-	// Create a camera and a visible object
-	OurVisibleComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("OurVisibleComponent"));
-	// Attach our camera and visible object to our root component. Offset and rotate the camera.
+	USceneComponent* sceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("BasePlayer"));
+	sceneComponent->SetupAttachment(RootComponent);
 
-	OurVisibleComponent->SetupAttachment(RootComponent);
-	OurVisibleComponent->bEditableWhenInherited = true;*/
+	m_playerMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshPlayer"));
+	m_playerMesh->SetupAttachment(sceneComponent);
+
+	m_playerMesh->bEditableWhenInherited = true;
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> meshLoader(TEXT("/Engine/BasicShapes/Cone.Cone"));
+
+	if (meshLoader.Succeeded()) {
+		m_playerMesh->SetStaticMesh(meshLoader.Object);
+		m_playerMesh->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
+		m_playerMesh ->SetWorldScale3D(FVector(1.f));
+	}
+
+
+
+
+	m_springArmCamera = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmCameraPlayer"));
+	m_springArmCamera->SetupAttachment(sceneComponent);
+
+	m_springArmCamera->bEditableWhenInherited = false;
+	m_springArmCamera->TargetArmLength = 1950.0f;
+	m_springArmCamera->bDoCollisionTest = false;
+	//m_springArmCamera->SetMobility(EComponentMobility::Movable);
+	m_springArmCamera->SocketOffset = FVector(0, 0, 1600);
+	UE_LOG(LogTemp, Warning, TEXT("Testbaaa"));
+
+	FQuat rotation(FVector(0, 1, 0), PI / 5);
+
+	m_camera = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraPlayer"));
+	m_camera->SetupAttachment(m_springArmCamera);
+	m_camera->SetRelativeRotation(rotation);
+
+	m_camera->bEditableWhenInherited = false;
+
+
+	
+
+	//m_camera->SetWorldLocationAndRotation(FVector(0, 0, 0), rotation);
+
+
+
 
 }
 
@@ -37,8 +74,7 @@ void AC_Player::BeginPlay()
 	if (GEngine)
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Entering the game"));
 	UE_LOG(LogTemp, Warning, TEXT("I'm the player"));
-
-
+	print("Initialization target camera");
 
 
 	NewLocation.X = 0;
@@ -48,7 +84,7 @@ void AC_Player::BeginPlay()
 	NewRotation = FQuat::Identity;
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 
-	
+
 }
 
 // Called every frame
@@ -60,7 +96,6 @@ void AC_Player::Tick(float DeltaTime)
 	{
 		FVector NewPosition = GetActorLocation() + (m_currentVelocity * DeltaTime);
 		SetActorLocation(NewPosition);
-
 
 	}
 
@@ -95,7 +130,7 @@ void AC_Player::MoveOnY(float value)
 	m_currentVelocity.Y = FMath::Clamp(value, -1.0f, 1.0f) * 100.0f * m_speedMovement;
 }
 
-float AC_Player::DegreesToRadians(float degrees) 
+float AC_Player::DegreesToRadians(float degrees)
 {
 	return  degrees / 180 * PI;
 }
