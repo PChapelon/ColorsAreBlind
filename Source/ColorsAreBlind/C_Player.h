@@ -19,12 +19,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		float m_speedMovement;
-		float m_angleRotation;
 		float m_speedRotation;
+		float m_speedGravity;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Location")
-		FVector NewLocation;
-		FQuat NewRotation;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 		class USpringArmComponent* m_springArmCamera;
@@ -32,6 +29,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Model")
 		class UStaticMeshComponent* m_playerMesh;
+		class UBoxComponent* m_playerCollision;
 
 
 protected:
@@ -39,6 +37,7 @@ protected:
 	virtual void BeginPlay() override;
 	float DegreesToRadians(float degrees);
 	FVector m_currentVelocity;
+	FRotator m_forwardRotator;
 
 public:	
 	// Sets default values for this pawn's properties
