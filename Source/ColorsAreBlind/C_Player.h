@@ -19,18 +19,33 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		float m_speedMovement;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		float m_speedRotation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		float m_speedGravity;
 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+		float m_springArmLength;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+		float m_springArmOffset;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+		float m_cameraAngle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Structure")
 		class USpringArmComponent* m_springArmCamera;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Structure")
 		class UCameraComponent* m_camera;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Model")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Structure")
 		class UStaticMeshComponent* m_playerMesh;
-		class UBoxComponent* m_playerCollision;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Structure")
+		class UC_MovementComponent* m_playerMovement;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Structure")
+		class UBoxComponent* m_playerCollision;
 
 protected:
 	// Called when the game starts or when spawned
@@ -50,10 +65,16 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	void Walk();
+
+	void Run();
+
 	void MoveOnX(float value);
 
 	void MovePlayerForward();
 
 	void MoveOnY(float value);
+
+	virtual UPawnMovementComponent* GetMovementComponent() const override;
 
 };
