@@ -46,10 +46,9 @@ void AC_LandscapeGenerator::BeginPlay()
 	Super::BeginPlay();
 	generateLandscape();
 
-	if (m_boolProps)
-	{
-		createSurfaceProps(FVector(0.0f, 0.0f, 0.0f), 50.0);
-	}
+	
+	createSurfaceProps(FVector(0.0f, 0.0f, 0.0f), 50.0);
+	
 	
 
 	
@@ -160,7 +159,6 @@ void AC_LandscapeGenerator::generateLandscape()
 	TArray<FColor> vertexColors;
 
 	m_mesh->CreateMeshSection(0, m_vertices, m_triangles, m_normals, m_verticesTexture, vertexColors, tangents, true);
-	m_mesh->ContainsPhysicsTriMeshData(true);
 
 	FStringAssetReference materialFinder(TEXT("/Game/Materials/Desert/Desert_MAT.Desert_MAT"));
 	UMaterialInstance* materialObject = Cast<UMaterialInstance>( materialFinder.TryLoad());
@@ -247,16 +245,34 @@ void AC_LandscapeGenerator::createSurfaceProps(FVector centerPoint, float radius
 		{
 			
 			
-			UE_LOG(LogTemp, Warning, TEXT("remplace  %f  ;  %f"), i , j);
-			if (FMath::Pow(correctedCenter.X - i, 2) + FMath::Pow( correctedCenter.Y - j, 2) <= FMath::Pow(radius,2))
+			float d = FMath::Pow(correctedCenter.X - i, 2) + FMath::Pow(correctedCenter.Y - j, 2);
+			if ( d <= FMath::Pow(radius,2))
 			{
 				int index = i * m_imageWidth + j;
-				m_vertices[index] = FVector(m_vertices[index].X, m_vertices[index].Y, averageValue);
-				m_heightMap[index] = averageValue;
+				if (d > FMath::Pow(radius - m_gradiantLevel, 2) && (radius - m_gradiantLevel > 0))
+				{
+					float coef = radius - FMath::TruncToFloat(FMath::Sqrt(d));
+					float z = m_vertices[index].Z + (( averageValue - m_vertices[index].Z ) * (coef / m_gradiantLevel));
+					//float z = (m_vertices[index].Z + averageValue) / 2;
+					//float z = 0.0f;
+					m_vertices[index] = FVector(m_vertices[index].X, m_vertices[index].Y, z);
+					m_heightMap[index] = z;
+				}
+				else
+				{
+					m_vertices[index] = FVector(m_vertices[index].X, m_vertices[index].Y, averageValue);
+					m_heightMap[index] = averageValue;
+					
+				}
+				
 
 			}
 		}
 	}
+
+	/*
+
+	*/
 
 
 	FVector* normalsFaces = new FVector[m_imageWidth * m_imageHeight];
@@ -310,7 +326,12 @@ void AC_LandscapeGenerator::createSurfaceProps(FVector centerPoint, float radius
 
 	TArray<FProcMeshTangent> tangents;
 	TArray<FColor> vertexColors;
-	m_mesh->UpdateMeshSection(0, m_vertices, m_normals, m_verticesTexture, vertexColors, tangents);
+
+	m_mesh->ClearAllMeshSections();
+	m_mesh->CreateMeshSection(0, m_vertices, m_triangles, m_normals, m_verticesTexture, vertexColors, tangents, true);
+
+	m_mesh->ContainsPhysicsTriMeshData(true);
+
 }
 
 

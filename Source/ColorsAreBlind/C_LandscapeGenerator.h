@@ -37,6 +37,9 @@ public:
 		bool m_boolProps = false;
 
 	UPROPERTY(EditAnywhere, Category = "SettingsLandscape")
+		unsigned int  m_gradiantLevel = 5.0f;
+
+	UPROPERTY(EditAnywhere, Category = "SettingsLandscape")
 		unsigned int  m_triangleSize = 50;
 
 	UPROPERTY(EditAnywhere, Category = "Render")

@@ -36,6 +36,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "SettingsLandscape")
 		bool m_boolProps = false;
 
+	UPROPERTY(EditAnywhere, Category = "SettingsLandscape")
+		unsigned int  m_triangleSize = 50;
+
 	UPROPERTY(EditAnywhere, Category = "Render")
 		UMaterialInstanceDynamic* m_materialDynamic;
 
