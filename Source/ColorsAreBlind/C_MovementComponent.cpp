@@ -43,7 +43,7 @@ void UC_MovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickTy
 
 	if (hitGround.IsValidBlockingHit())
 	{
-		SlideAlongSurface(gravity, 1.0f - hitGround.Time, hitGround.Normal, hitGround);
+		SlideAlongSurface(gravity, 1.0f - hitGround.Time, FVector(0.0f, 0.0f, 1.0f), hitGround);
 	}
 
 	if (!direction.IsNearlyZero())

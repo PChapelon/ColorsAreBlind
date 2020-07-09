@@ -40,7 +40,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Structure")
 		class UStaticMeshComponent* m_playerMesh;
 
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Structure")
 		class UC_MovementComponent* m_playerMovement;
 

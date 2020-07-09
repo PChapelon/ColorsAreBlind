@@ -10,6 +10,11 @@ UCLASS()
 class COLORSAREBLIND_API AC_LandscapeGenerator : public AActor
 {
 	GENERATED_BODY()
+
+
+private: 
+	UPROPERTY()
+		TSubclassOf<AActor> m_temp;
 	
 public:	
 	// Sets default values for this actor's properties
@@ -20,7 +25,7 @@ public:
 
 	UPROPERTY(EditAnywhere, Category="Mesh")
 		class UProceduralMeshComponent* m_mesh;
-
+	
 	UPROPERTY(EditAnywhere, Category = "SettingsLandscape")
 		float amplitude = 200.0f;
 
@@ -37,7 +42,7 @@ public:
 		bool m_boolProps = false;
 
 	UPROPERTY(EditAnywhere, Category = "SettingsLandscape")
-		unsigned int  m_gradiantLevel = 5.0f;
+		unsigned int  m_gradiantLevel = 10.0f;
 
 	UPROPERTY(EditAnywhere, Category = "SettingsLandscape")
 		unsigned int  m_triangleSize = 50;
@@ -47,6 +52,12 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Render")
 		UMaterial* m_material;
+
+	UPROPERTY()
+		class AC_PropElement* m_spawnProp;
+
+	UPROPERTY()
+		TArray<AC_PropElement*> m_props;
 
 protected:
 	// Called when the game starts or when spawned
