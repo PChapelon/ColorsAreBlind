@@ -6,6 +6,14 @@
 #include "GameFramework/Actor.h"
 #include "C_LandscapeGenerator.generated.h"
 
+UENUM(BlueprintType)
+enum WorldType
+{
+	DESERT,
+	BANQUISE,
+	FORET
+};
+
 UCLASS()
 class COLORSAREBLIND_API AC_LandscapeGenerator : public AActor
 {
@@ -25,6 +33,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category="Mesh")
 		class UProceduralMeshComponent* m_mesh;
+
+	UPROPERTY(EditAnywhere, Category = "SettingsWorld")
+		TEnumAsByte<WorldType> m_worldType ;
 	
 	UPROPERTY(EditAnywhere, Category = "SettingsLandscape")
 		float amplitude = 200.0f;
@@ -32,14 +43,17 @@ public:
 	UPROPERTY(EditAnywhere, Category = "SettingsLandscape")
 		float detailsLevel = 0.05f;
 
+	UPROPERTY(EditAnywhere, Category = "SettingsGenerator")
+		int32 m_seed;
+
+	UPROPERTY(EditAnywhere, Category = "SettingsGenerator")
+		bool m_seedManually = false;
+
 	UPROPERTY(EditAnywhere, Category = "SettingsLandscape")
 		unsigned int m_imageWidth = 200;
 
 	UPROPERTY(EditAnywhere, Category = "SettingsLandscape")
 		unsigned int m_imageHeight = 200;
-
-	UPROPERTY(EditAnywhere, Category = "SettingsLandscape")
-		bool m_boolProps = false;
 
 	UPROPERTY(EditAnywhere, Category = "SettingsLandscape")
 		unsigned int  m_gradiantLevel = 10.0f;

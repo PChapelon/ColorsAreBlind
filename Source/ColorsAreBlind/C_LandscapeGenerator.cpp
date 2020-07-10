@@ -11,6 +11,7 @@
 #include "Engine/StreamableManager.h"
 #include "EngineUtils.h"
 #include "C_PropElement.h"
+#include "Math/RandomStream.h"
 
 
 
@@ -24,6 +25,8 @@ AC_LandscapeGenerator::AC_LandscapeGenerator()
 	m_mesh->bUseAsyncCooking = true;
 
 	m_heightMap = new float[m_imageHeight * m_imageWidth];
+	m_seed = FMath::RandRange(0, 99999999);
+	UE_LOG(LogTemp, Warning, TEXT("%i   seed man"), m_seed);
 
 
 }
@@ -89,11 +92,30 @@ void AC_LandscapeGenerator::generateLandscape()
 
 	
 	FVector *normalsFaces = new FVector[m_imageWidth * m_imageHeight];
+	FRandomStream random;
+	if (!m_seedManually)
+	{
+		m_seed = FMath::RandRange(0, 99999999);
+		random.Initialize(m_seed);
+		detailsLevel = random.FRandRange(0.01f, 0.09f);
+		amplitude = random.FRandRange(50.0f, 800.0f);
+		
+		
+		UE_LOG(LogTemp, Warning, TEXT("%i   seed auto  amplitude %f     detailsLevel   %f"), m_seed, amplitude, detailsLevel);
+	}
+
+
+	random.Initialize(m_seed);
+
+	float perlinY = random.FRandRange(0.0f, 50.0f);
+	float perlinX = random.FRandRange(0.0f, 50.0f);
+
+	UE_LOG(LogTemp, Warning, TEXT("%f  "), perlinY);
+	UE_LOG(LogTemp, Warning, TEXT("%f  "), perlinX);
 	
+	float initPerlinY = perlinY;
 	
-	
-	float perlinX = 0.0f;
-	float perlinY = 0.0f;
+	//float perlinX = 0.0f;
 	for ( i = 0; i < m_imageHeight; i++)
 	{
 		for ( j = 0; j < m_imageWidth; j++)
@@ -110,7 +132,7 @@ void AC_LandscapeGenerator::generateLandscape()
 
 			perlinY += detailsLevel;
 		}
-		perlinY = 0.0f;
+		perlinY = initPerlinY;
 		perlinX += detailsLevel;
 	}
 	for ( i = 0; i < m_imageHeight - 1; i++)
@@ -175,35 +197,6 @@ void AC_LandscapeGenerator::generateLandscape()
 	m_mesh->SetMaterial(0, m_materialDynamic);
 
 	delete[] normalsFaces;
-
-
-	
-	/*static ConstructorHelpers::FObjectFinder<UStaticMesh> meshLoader(TEXT("/Game/Models/Ground.Ground"));
-	if (meshLoader.Succeeded()) {
-		m_staticMesh->SetStaticMesh(meshLoader.Object);
-		m_staticMesh->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
-		m_staticMesh->SetWorldScale3D(FVector(1.f));
-	}*/
-
-	//static ConstructorHelpers::FObjectFinder<UStaticMesh> meshLoader(TEXT("/Game/pyramide.pyramide"));
-	
-
-	
-	//m_mesh->SetMaterial(0, DynamicMaterial)
-
-	/*UMaterial* material;
-	static ConstructorHelpers::FObjectFinder<UMaterial> materialFinder(TEXT("Material'/Game/Materials/Desert/Desert_MAT.Desert_MAT'"));
-
-	if (materialFinder.Object != NULL)
-	{
-		material = (UMaterial*)materialFinder.Object;
-
-		UMaterialInstanceDynamic* materialToAffect = UMaterialInstanceDynamic::Create(material, this);
-		m_mesh->SetMaterial(0, materialToAffect);
-	}*/
-
-
-	
 }
 
 
@@ -212,15 +205,16 @@ void AC_LandscapeGenerator::createSurfaceProps(FVector centerPoint, float radius
 	for (AC_PropElement* elt : m_props)
 	{
 
-		UE_LOG(LogTemp, Warning, TEXT(" %s   :  %f  %f  %f"), *elt->getModelPath(), elt->getCenterPlacement().X, elt->getCenterPlacement().Y, elt->getCenterPlacement().Z);
+		//UE_LOG(LogTemp, Warning, TEXT(" %s   :  %f  %f  %f"), *elt->getModelPath(), elt->getCenterPlacement().X, elt->getCenterPlacement().Y, elt->getCenterPlacement().Z);
 		FVector correctedCenter(0.0f);
 		
 		
 		
 		centerPoint = elt->getCenterPlacement();
 
-		if (centerPoint.X > m_imageHeight || centerPoint.Y > m_imageWidth || centerPoint.X < 0 || centerPoint.Y < 0)
+		if (centerPoint.X > m_imageHeight || centerPoint.Y > m_imageWidth || centerPoint.X < 0 || centerPoint.Y < 0 && elt != nullptr)
 		{
+			elt->Destroy();
 			continue;
 		}
 
@@ -288,10 +282,10 @@ void AC_LandscapeGenerator::createSurfaceProps(FVector centerPoint, float radius
 			}
 		}
 		int centerZ = elt->getCenterX() * m_imageWidth + elt->getCenterY();
-		FVector v(elt->getCenterPlacement().X * m_triangleSize, elt->getCenterPlacement().Y * m_triangleSize, m_heightMap[centerZ]);
-		elt->SetActorLocation(v);
+		FVector v(elt->getCenterPlacement().X * m_triangleSize , elt->getCenterPlacement().Y * m_triangleSize, m_heightMap[centerZ]);
+		elt->SetActorLocation(v + GetActorLocation());
 
-		UE_LOG(LogTemp, Warning, TEXT(" %s   :  %f  %f  %f"), *elt->getModelPath(), v.X, v.Y, m_heightMap[centerZ]);
+		//UE_LOG(LogTemp, Warning, TEXT(" %s   :  %f  %f  %f"), *elt->getModelPath(), v.X, v.Y, m_heightMap[centerZ]);
 	}
 
 	FVector* normalsFaces = new FVector[m_imageWidth * m_imageHeight];

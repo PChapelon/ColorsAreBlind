@@ -12,10 +12,11 @@ AC_PropElement::AC_PropElement()
 	m_radiusPlacementGradient = 0.0f;
 	m_pathToObject = FString("/Game/Models/Temple/temple.temple");
 	m_mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshProps"));
-	m_mesh->SetupAttachment(RootComponent);
+	//m_mesh->SetupAttachment(RootComponent);
+	RootComponent = m_mesh;
 }
 
-void AC_PropElement::setPropertiesProp(float radius, float radiusGradient, FString path, FVector center) 
+void AC_PropElement::setPropertiesProp(float radius, float radiusGradient, FString path, FVector center, FVector scale )
 {
 	m_radiusPlacement = radius;
 	m_radiusPlacementGradient = radius * 2/3 < radiusGradient ? radius * 2/3 : radiusGradient;
@@ -30,8 +31,9 @@ void AC_PropElement::setPropertiesProp(float radius, float radiusGradient, FStri
 	{
 		m_mesh->SetStaticMesh(meshObject);;
 		m_mesh->SetRelativeLocation(FVector(0.0f));
-		m_mesh->SetWorldScale3D(FVector(1.f));
-
+		m_mesh->SetWorldScale3D(scale);
+		m_mesh->SetRelativeScale3D(scale);
+		SetActorScale3D(scale);
 	}
 }
 

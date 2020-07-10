@@ -14,7 +14,7 @@ class COLORSAREBLIND_API AC_PropElement : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AC_PropElement();
-	void setPropertiesProp(float radius, float radiusGradient, FString path, FVector center );
+	void setPropertiesProp(float radius, float radiusGradient, FString path, FVector center, FVector scale = FVector(1.0f) );
 	
 	float getRadiusPlacement();
 	
