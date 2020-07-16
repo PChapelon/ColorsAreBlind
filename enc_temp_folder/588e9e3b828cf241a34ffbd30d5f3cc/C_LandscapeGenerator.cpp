@@ -108,11 +108,9 @@ void AC_LandscapeGenerator::generateLandscape()
 	{
 		m_seed = FMath::RandRange(0, 99999999);
 		random.Initialize(m_seed);
-	}
-
-	if(!m_landscapeSettingManually)
-	{
+		
 		m_worldType = static_cast<WorldType>(random.FRandRange(0, static_cast<float>(WorldType::last)));
+		//auto color_name = magic_enum::enum_name(color);
 
 
 		switch (m_worldType)
@@ -136,7 +134,7 @@ void AC_LandscapeGenerator::generateLandscape()
 		
 
 		detailsLevel = random.FRandRange(0.01f, 0.09f);
-		amplitude = random.FRandRange(m_dataTemp.amplitudeMin, m_dataTemp.amplitudeMax);
+		amplitude = random.FRandRange(50.0f, 800.0f);
 		
 		UE_LOG(LogTemp, Warning, TEXT("%i   seed auto  amplitude %f     detailsLevel   %f"), m_seed, amplitude, detailsLevel);
 	}

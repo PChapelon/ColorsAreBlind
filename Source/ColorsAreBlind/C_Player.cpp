@@ -17,7 +17,7 @@
 
 // Sets default values
 // Other settings 1950f 1600f
-AC_Player::AC_Player() : m_speedMovement(10.0f), m_speedRotation(0.1f), m_springArmLength(1250.0f), m_springArmOffset(1300.0f), m_cameraAngle(PI/5)
+AC_Player::AC_Player() : m_speedMovement(10.0f), m_speedRotation(0.1f), m_springArmLength(1250.0f), m_springArmOffset(1250.0f), m_cameraAngle(PI/4)
 {
 	// Init Values
 	m_forwardRotator = FRotator(0.0f, 0.0f, 0.0f);
@@ -54,7 +54,7 @@ AC_Player::AC_Player() : m_speedMovement(10.0f), m_speedRotation(0.1f), m_spring
 	m_springArmCamera->bDoCollisionTest = false;
 	m_springArmCamera->SocketOffset = FVector(0, 0, m_springArmOffset);
 	m_springArmCamera->bEnableCameraLag = true;
-	m_springArmCamera->CameraLagSpeed = 3.0f;
+	m_springArmCamera->CameraLagSpeed = 2.5f;
 
 	FQuat rotation(FVector(0, 1, 0), m_cameraAngle);
 	m_camera = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraPlayer"));

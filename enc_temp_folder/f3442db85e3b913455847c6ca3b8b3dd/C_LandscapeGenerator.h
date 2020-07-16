@@ -70,9 +70,6 @@ public:
 		bool m_seedManually = false;
 
 	UPROPERTY(EditAnywhere, Category = "SettingsLandscape")
-		bool m_landscapeSettingManually = false;
-
-	UPROPERTY(EditAnywhere, Category = "SettingsLandscape")
 		unsigned int m_imageWidth = 200;
 
 	UPROPERTY(EditAnywhere, Category = "SettingsLandscape")
