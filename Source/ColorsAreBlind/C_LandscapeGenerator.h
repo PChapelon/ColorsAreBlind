@@ -16,14 +16,33 @@ enum class WorldType : uint8
 };
 
 USTRUCT(BlueprintType)
+struct  FWorldModel
+{
+	GENERATED_BODY()
+public:
+	FString name;
+	FString path;
+	bool flat;
+	float radius;
+	float subRadius;
+};
+
+USTRUCT(BlueprintType)
 struct  FWorldDataStruct
 {
 	GENERATED_BODY()
 public:
-	std::string name;
-	int amplitudeMin;
-	int amplitudeMax;
+	FString name;
+	float amplitudeMin;
+	float amplitudeMax;
+	FWorldModel mainModel;
+	TArray<FWorldModel> subModelsMedium;
+	TArray<FWorldModel> subModelsSmall;
 };
+
+
+
+
 
 
 UCLASS()
@@ -41,7 +60,8 @@ public:
 	AC_LandscapeGenerator();
 	~AC_LandscapeGenerator();
 
-	void createSurfaceProps(FVector centerPoint, float radius);
+	void createSurfaceProps();
+	void fillProps();
 
 	UPROPERTY(EditAnywhere, Category="Mesh")
 		class UProceduralMeshComponent* m_mesh;
@@ -53,7 +73,22 @@ public:
 		TMap<WorldType, FWorldDataStruct> m_worldDatas;
 
 	UPROPERTY(EditAnywhere, Category = "SettingsWorld")
+		TMap<FString, WorldType> m_worldStringToEnum;
+
+	UPROPERTY(EditAnywhere, Category = "SettingsWorld")
 		FWorldDataStruct m_dataTemp;
+
+	UPROPERTY(EditAnywhere, Category = "SettingsWorld")
+		FWorldModel m_modelTemp;
+
+	UPROPERTY(EditAnywhere, Category = "SettingsWorld")
+		float m_probabilityMedium = 0.2f;
+
+	UPROPERTY(EditAnywhere, Category = "SettingsWorld")
+		float m_probabilitySmall = 0.5f;
+
+	UPROPERTY(EditAnywhere, Category = "SettingsWorld")
+		float m_placeProps = 0.04f;
 
 
 	
@@ -95,6 +130,8 @@ public:
 
 	UPROPERTY()
 		TArray<AC_PropElement*> m_props;
+	UPROPERTY()
+		FRandomStream m_random;
 
 protected:
 	// Called when the game starts or when spawned
@@ -108,7 +145,10 @@ protected:
 	TArray<int32> m_triangles;
 	TArray<FVector2D> m_verticesTexture;
 
+	TArray<FColor> m_vertexColors;
+
 	float* m_heightMap;
+	int32* m_distributionMap;
 
 public:	
 	// Called every frame

@@ -23,13 +23,13 @@ void AC_PropElement::setPropertiesProp(float radius, float radiusGradient, FStri
 	
 	m_pathToObject = path;
 	m_center = center;
-	 
+	
 	FStringAssetReference meshFinder(m_pathToObject);
 	UStaticMesh* meshObject = Cast<UStaticMesh>(meshFinder.TryLoad());
 
 	if (meshObject != nullptr)
 	{
-		m_mesh->SetStaticMesh(meshObject);;
+		m_mesh->SetStaticMesh(meshObject);
 		m_mesh->SetRelativeLocation(FVector(0.0f));
 		m_mesh->SetWorldScale3D(scale);
 		m_mesh->SetRelativeScale3D(scale);
