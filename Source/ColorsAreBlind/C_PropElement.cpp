@@ -11,19 +11,22 @@ AC_PropElement::AC_PropElement()
 	m_radiusPlacement = 0.0f;
 	m_radiusPlacementGradient = 0.0f;
 	m_pathToObject = FString("/Game/Models/Temple/temple.temple");
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	m_mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshProps"));
-	//m_mesh->SetupAttachment(RootComponent);
-	RootComponent = m_mesh;
+	m_mesh->SetupAttachment(RootComponent);
 }
 
-void AC_PropElement::setPropertiesProp(float radius, float radiusGradient, FString path, FVector center, FVector scale )
+void AC_PropElement::setPropertiesProp(float radius, float radiusGradient, FString path, FVector center, unsigned int heightImage, unsigned int widthImage, FRandomStream* random, bool flat, FVector scale )
 {
+
 	m_radiusPlacement = radius;
 	m_radiusPlacementGradient = radius * 2/3 < radiusGradient ? radius * 2/3 : radiusGradient;
 	
 	m_pathToObject = path;
 	m_center = center;
-	
+
+	m_flatGround = flat;
+
 	FStringAssetReference meshFinder(m_pathToObject);
 	UStaticMesh* meshObject = Cast<UStaticMesh>(meshFinder.TryLoad());
 
@@ -31,10 +34,52 @@ void AC_PropElement::setPropertiesProp(float radius, float radiusGradient, FStri
 	{
 		m_mesh->SetStaticMesh(meshObject);
 		m_mesh->SetRelativeLocation(FVector(0.0f));
+		
+		FRotator rotatorRandom;		
+		rotatorRandom.Yaw = random->FRandRange(0.0f, 360.0f);
+		m_mesh->SetRelativeRotation(rotatorRandom);
+		if(!m_flatGround)
+			m_mesh->SetRelativeRotation(FQuat(FVector(0,1,0), PI/2));
 		m_mesh->SetWorldScale3D(scale);
 		m_mesh->SetRelativeScale3D(scale);
 		SetActorScale3D(scale);
 	}
+
+	FVector correctedCenter;
+	if (m_center.X + radius >= heightImage || m_center.X - radius < 0.0f)
+	{
+		if (m_center.X + radius >= heightImage)
+		{
+			correctedCenter.X = heightImage - radius - 1.0f;
+		}
+		else
+		{
+			correctedCenter.X = radius + 1.0f;
+		}
+	}
+	else
+	{
+		correctedCenter.X = m_center.X;
+	}
+
+	if (m_center.Y + radius >= widthImage || m_center.Y - radius < 0.0f)
+	{
+		if (m_center.Y + radius >= widthImage)
+		{
+			correctedCenter.Y = widthImage - radius - 1.0f;
+		}
+		else
+		{
+			correctedCenter.Y = radius + 1.0f;
+		}
+	}
+	else
+	{
+		correctedCenter.Y = m_center.Y;
+	}
+
+
+	setCenter(correctedCenter);
 }
 
 // Called when the game starts or when spawned
@@ -50,10 +95,21 @@ void AC_PropElement::Tick(float DeltaTime)
 
 }
 
+void AC_PropElement::setRotation(FRotator rotation)
+{
+	SetActorRotation(rotation);
+}
+
+bool AC_PropElement::isFlatGround()
+{
+	return m_flatGround;
+}
+
 float AC_PropElement::getRadiusPlacement()
 {
 	return m_radiusPlacement;
 }
+
 
 float AC_PropElement::getRadiusPlacementGradient()
 {

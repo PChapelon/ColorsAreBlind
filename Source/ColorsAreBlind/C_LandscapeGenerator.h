@@ -61,10 +61,25 @@ public:
 	~AC_LandscapeGenerator();
 
 	void createSurfaceProps();
-	void fillProps();
+	void fillPropsPerlin();
+	void fillPropsRelative();
 
 	UPROPERTY(EditAnywhere, Category="Mesh")
 		class UProceduralMeshComponent* m_mesh;
+
+	UPROPERTY(EditAnywhere, Category = "Probability Distribution Relative")
+		float m_probabilitySpawnDefault = 0.2f;
+
+	UPROPERTY(EditAnywhere, Category = "Probability Distribution Relative")
+		float m_increaseProbabilityMedium = 0.2f;
+
+	UPROPERTY(EditAnywhere, Category = "Probability Distribution Relative")
+		float m_increaseProbabilitySmall = 0.3f;
+	
+	UPROPERTY(EditAnywhere, Category = "Probability Distribution Relative")
+		bool m_usePerlinProb = true;
+
+
 
 	UPROPERTY(EditAnywhere, Category = "SettingsWorld")
 		WorldType m_worldType ;
@@ -81,14 +96,24 @@ public:
 	UPROPERTY(EditAnywhere, Category = "SettingsWorld")
 		FWorldModel m_modelTemp;
 
-	UPROPERTY(EditAnywhere, Category = "SettingsWorld")
+	UPROPERTY(EditAnywhere, Category = "Probability Distribution Perlin")
 		float m_probabilityMedium = 0.2f;
 
-	UPROPERTY(EditAnywhere, Category = "SettingsWorld")
+	UPROPERTY(EditAnywhere, Category = "Probability Distribution Perlin")
 		float m_probabilitySmall = 0.5f;
 
-	UPROPERTY(EditAnywhere, Category = "SettingsWorld")
+	UPROPERTY(EditAnywhere, Category = "Probability Distribution Perlin")
 		float m_placeProps = 0.04f;
+
+	UPROPERTY(EditAnywhere, Category = "Probability Distribution Perlin")
+		float m_thresholdMedium = 0.7f;
+
+	UPROPERTY(EditAnywhere, Category = "Probability Distribution Perlin")
+		float m_thresholdSmall = 0.2f;
+
+	UPROPERTY(EditAnywhere, Category = "SettingsWorld")
+		float m_coeffOrientation = 1.0f / 2.0f;
+
 
 
 	

@@ -84,11 +84,11 @@ AC_LandscapeGenerator::AC_LandscapeGenerator()
 				}
 				else if (FolderDirectoryModel[j] == "SubModelMedium")
 				{
-					temporaryDataStruct->subModelsMedium.Add({ FilesModel[k], pathToModel, true, 10.0f, 5.0f });
+					temporaryDataStruct->subModelsMedium.Add({ FilesModel[k], pathToModel, true, 10.0f, 7.0f });
 				}
 				else
 				{
-					temporaryDataStruct->subModelsSmall.Add({ FilesModel[k], pathToModel, false, 0.0f, 0.0f });
+					temporaryDataStruct->subModelsSmall.Add({ FilesModel[k], pathToModel, false, 3.0f, 0.0f });
 				}
 			}
 		}
@@ -129,8 +129,10 @@ void AC_LandscapeGenerator::BeginPlay()
 	m_vertexColors.Empty();
 
 	generateLandscape();
-
-	fillProps();
+	if (m_usePerlinProb)
+		fillPropsPerlin();
+	else
+		fillPropsRelative();
 
 	createSurfaceProps();
 	
@@ -281,7 +283,7 @@ void AC_LandscapeGenerator::generateLandscape()
 
 	m_mesh->CreateMeshSection(0, m_vertices, m_triangles, m_normals, m_verticesTexture, m_vertexColors, tangents, true);
 
-	FStringAssetReference materialFinder(TEXT("/Game/Materials/Desert/Desert_MAT.Desert_MAT"));
+	FStringAssetReference materialFinder(TEXT("/Game/Materials/DESERT/Desertmat/Desert_MAT.Desert_MAT"));
 	UMaterialInstance* materialObject = Cast<UMaterialInstance>( materialFinder.TryLoad());
 	m_materialDynamic = UMaterialInstanceDynamic::Create(materialObject, m_mesh);
 
@@ -293,22 +295,128 @@ void AC_LandscapeGenerator::generateLandscape()
 	delete[] normalsFaces;
 }
 
-void AC_LandscapeGenerator::fillProps()
+void AC_LandscapeGenerator::fillPropsRelative()
 {
 	FTransform SpawnLocation(FQuat(FRotator(0.0f)), FVector(0.0f), FVector(0.0f));
 
-
-	float perlinY = m_random.FRandRange(0.0f, 50.0f);
-	float perlinX = m_random.FRandRange(0.0f, 50.0f);
-
-	float initPerlinY = perlinY;
-	FVector2D positionMain(0.0f, 0.0f);
-	float maxPerlin = 0.0f;
+	bool* placeAvailable = new bool[m_imageWidth * m_imageHeight];
+	float* probabilityMediumSpawn = new float[m_imageWidth * m_imageHeight];
+	float* probabilitySmallSpawn = new float[m_imageWidth * m_imageHeight];
 
 	for (unsigned int i = 0; i < m_imageHeight; i++)
 	{
 		for (unsigned int j = 0; j < m_imageWidth; j++)
 		{
+			placeAvailable[i * m_imageWidth + j] = true;
+			probabilityMediumSpawn[i * m_imageWidth + j] = m_probabilitySpawnDefault;
+			probabilitySmallSpawn[i * m_imageWidth + j] = m_probabilitySpawnDefault + m_probabilityMedium;
+		}
+
+	}
+
+	FVector positionMain(FMath::TruncToFloat(m_random.FRandRange(0.0f, m_imageHeight)), FMath::TruncToFloat(m_random.FRandRange(0.0f, m_imageWidth)), 0.0f);
+
+	m_spawnProp = GetWorld()->SpawnActor<AC_PropElement>(AC_PropElement::StaticClass(), SpawnLocation);
+	m_spawnProp->setPropertiesProp(m_dataTemp.mainModel.radius, m_dataTemp.mainModel.subRadius, *m_dataTemp.mainModel.path, FVector(positionMain.X, positionMain.Y, 0.0f), m_imageHeight, m_imageWidth, &m_random);
+	m_props.Add(m_spawnProp);
+
+	float smallRadius = m_spawnProp->getRadiusPlacement() - m_spawnProp->getRadiusPlacementGradient();
+	for (int i = m_spawnProp->getCenterPlacement().X - m_spawnProp->getRadiusPlacement(); i < m_spawnProp->getCenterPlacement().X + m_spawnProp->getRadiusPlacement(); i++)
+		for (int j = m_spawnProp->getCenterPlacement().Y - m_spawnProp->getRadiusPlacement(); j < m_spawnProp->getCenterPlacement().Y + m_spawnProp->getRadiusPlacement(); j++)
+		{
+			if(FMath::Sqrt(FMath::Pow(i - m_spawnProp->getCenterPlacement().X, 2) + FMath::Pow(j - m_spawnProp->getCenterPlacement().Y, 2)) < smallRadius)
+				placeAvailable[i * m_imageWidth + j] = false;  //Unavailable to place a structure on point
+
+			probabilityMediumSpawn[i * m_imageWidth + j] = probabilityMediumSpawn[i * m_imageWidth + j] + (m_increaseProbabilityMedium * (2.0f / 3.0f));
+			UE_LOG(LogTemp, Warning, TEXT("%f  %f   pr"), probabilityMediumSpawn[i * m_imageWidth + j], m_increaseProbabilityMedium * (1.0f / 3.0f));
+			probabilitySmallSpawn[i * m_imageWidth + j] += m_increaseProbabilityMedium * (2.0f / 3.0f);
+		}
+
+	
+
+
+	for (unsigned int i = 0; i < m_imageHeight; i++)
+	{
+		for (unsigned int j = 0; j < m_imageWidth; j++)
+		{
+			if (placeAvailable[i * m_imageWidth + j])
+			{
+				float rand = m_random.FRandRange(0.0f, 100.0f);
+				UE_LOG(LogTemp, Warning, TEXT("%f   %f   rand"), rand, probabilityMediumSpawn[i * m_imageWidth + j]);
+				if ( rand < probabilityMediumSpawn[i * m_imageWidth + j] ) // Medium
+				{
+
+					
+					m_spawnProp = GetWorld()->SpawnActor<AC_PropElement>(AC_PropElement::StaticClass(), SpawnLocation);
+					int randomModel = m_random.RandRange(0, m_dataTemp.subModelsMedium.Num() - 1);
+					m_spawnProp->setPropertiesProp(m_dataTemp.subModelsMedium[randomModel].radius, m_dataTemp.subModelsMedium[randomModel].subRadius, *m_dataTemp.subModelsMedium[randomModel].path, FVector(i, j, 0.0f), m_imageHeight, m_imageWidth, &m_random, m_dataTemp.subModelsMedium[randomModel].flat);
+					m_props.Add(m_spawnProp);
+
+					smallRadius = m_spawnProp->getRadiusPlacement() - m_spawnProp->getRadiusPlacementGradient();
+					for (int k = m_spawnProp->getCenterPlacement().X - m_spawnProp->getRadiusPlacement(); k < m_spawnProp->getCenterPlacement().X + m_spawnProp->getRadiusPlacement(); k++)
+						for (int l = m_spawnProp->getCenterPlacement().Y - m_spawnProp->getRadiusPlacement(); l < m_spawnProp->getCenterPlacement().Y + m_spawnProp->getRadiusPlacement(); l++)
+						{
+							if (FMath::Sqrt(FMath::Pow(i - m_spawnProp->getCenterPlacement().X, 2) + FMath::Pow(j - m_spawnProp->getCenterPlacement().Y, 2)) < smallRadius)
+								placeAvailable[i * m_imageWidth + j] = false;  //Unavailable to place a structure on point
+							probabilitySmallSpawn[i * m_imageWidth + j] += m_increaseProbabilitySmall * (2.0f / 3.0f);
+						}
+				}
+			}
+		}
+	}
+
+	for (unsigned int i = 0; i < m_imageHeight; i++)
+	{
+		for (unsigned int j = 0; j < m_imageWidth; j++)
+		{
+			if (placeAvailable[i * m_imageWidth + j])
+			{
+				float rand = m_random.FRandRange(0.0f, 100.0f);
+				UE_LOG(LogTemp, Warning, TEXT("%f   %f   rand"), rand, probabilityMediumSpawn[i * m_imageWidth + j]);
+				if (rand < probabilitySmallSpawn[i * m_imageWidth + j]) // Medium
+				{
+					m_spawnProp = GetWorld()->SpawnActor<AC_PropElement>(AC_PropElement::StaticClass(), SpawnLocation);
+					int randomModel = m_random.RandRange(0, m_dataTemp.subModelsMedium.Num() - 1);
+					m_spawnProp->setPropertiesProp(m_dataTemp.subModelsSmall[randomModel].radius, m_dataTemp.subModelsSmall[randomModel].subRadius, *m_dataTemp.subModelsSmall[randomModel].path, FVector(i, j, 0.0f), m_imageHeight, m_imageWidth, &m_random, m_dataTemp.subModelsSmall[randomModel].flat);
+					m_props.Add(m_spawnProp);
+
+					for (int k = m_spawnProp->getCenterPlacement().X - m_spawnProp->getRadiusPlacement(); k < m_spawnProp->getCenterPlacement().X + m_spawnProp->getRadiusPlacement(); k++)
+						for (int l = m_spawnProp->getCenterPlacement().Y - m_spawnProp->getRadiusPlacement(); l < m_spawnProp->getCenterPlacement().Y + m_spawnProp->getRadiusPlacement(); l++)
+						{
+							if (FMath::Sqrt(FMath::Pow(i - m_spawnProp->getCenterPlacement().X, 2) + FMath::Pow(j - m_spawnProp->getCenterPlacement().Y, 2)) < m_spawnProp->getRadiusPlacement())
+								placeAvailable[i * m_imageWidth + j] = false;
+						}
+				}
+			}
+		}
+	}
+
+
+	delete[] placeAvailable;
+}
+
+void AC_LandscapeGenerator::fillPropsPerlin()
+{
+	FTransform SpawnLocation(FQuat(FRotator(0.0f)), FVector(0.0f), FVector(0.0f));
+
+
+	float perlinY = m_random.FRandRange(0.0f, 50.0f);
+
+	float perlinX = m_random.FRandRange(0.0f, 50.0f);
+
+
+	float initPerlinX = perlinX;
+	float initPerlinY = perlinY;
+	FVector2D positionMain(0.0f, 0.0f);
+	float maxPerlin = 0.0f;
+
+	bool* placeAvailable = new bool[m_imageWidth * m_imageHeight];
+
+	for (unsigned int i = 0; i < m_imageHeight; i++)
+	{
+		for (unsigned int j = 0; j < m_imageWidth; j++)
+		{
+
 			float z = FMath::PerlinNoise2D(FVector2D(perlinX, perlinY)) + 1.0f;
 			if (maxPerlin < z)
 			{
@@ -318,6 +426,7 @@ void AC_LandscapeGenerator::fillProps()
 
 
 			}
+			placeAvailable[i * m_imageWidth + j] = true;
 			perlinY += m_placeProps;
 		}
 		perlinY = initPerlinY;
@@ -326,154 +435,153 @@ void AC_LandscapeGenerator::fillProps()
 	}
 
 
-
-
-
-	
 	m_spawnProp = GetWorld()->SpawnActor<AC_PropElement>(AC_PropElement::StaticClass(), SpawnLocation);
-	m_spawnProp->setPropertiesProp(m_dataTemp.mainModel.radius, m_dataTemp.mainModel.subRadius, *m_dataTemp.mainModel.path, FVector(positionMain.X, positionMain.Y, 0.0f));
+	m_spawnProp->setPropertiesProp(m_dataTemp.mainModel.radius, m_dataTemp.mainModel.subRadius, *m_dataTemp.mainModel.path, FVector(positionMain.X, positionMain.Y, 0.0f), m_imageHeight, m_imageWidth, &m_random);
 	m_props.Add(m_spawnProp);
 
+	float smallRadius = m_spawnProp->getRadiusPlacement() - m_spawnProp->getRadiusPlacementGradient();
+	for (int i = m_spawnProp->getCenterPlacement().X - smallRadius ; i < m_spawnProp->getCenterPlacement().X + smallRadius; i++)
+		for (int j = m_spawnProp->getCenterPlacement().Y - smallRadius; j < m_spawnProp->getCenterPlacement().Y + smallRadius; j++)
+			placeAvailable[i * m_imageWidth + j] = false;  //Unavailable to place a structure on point
+		
+	perlinX = initPerlinX;
+	perlinY = initPerlinY;
 
-
-
-	/*
-
-
-	if (m_dataTemp.subModelsMedium.Num() > 0)
+	for (unsigned int i = 0; i < m_imageHeight; i++)
 	{
-		m_props.Add(GetWorld()->SpawnActor<AC_PropElement>(AC_PropElement::StaticClass(), SpawnLocation));
-		m_spawnProp = m_props[m_props.Num() - 1];
-		m_spawnProp->setPropertiesProp(m_dataTemp.subModelsMedium[0].radius, m_dataTemp.subModelsMedium[0].subRadius, *m_dataTemp.subModelsMedium[0].path, FVector(190.0f, 150.0f, 0.0f));
+		for (unsigned int j = 0; j < m_imageWidth; j++)
+		{
+			if (placeAvailable[i * m_imageWidth + j] )
+			{
+				float rand = m_random.FRandRange(0.0f, 100.0f);
+				float perlinValue = FMath::PerlinNoise2D(FVector2D(perlinX, perlinY)) + 1.0f;
+				if (perlinValue > m_thresholdMedium && m_probabilityMedium > rand) // Medium
+				{
+					UE_LOG(LogTemp, Warning, TEXT("%f   %f   rarara"), rand, m_probabilityMedium);
+
+					//UE_LOG(LogTemp, Warning, TEXT("%f   %f   rand prob"), rand, m_probabilityMedium);
+					m_spawnProp = GetWorld()->SpawnActor<AC_PropElement>(AC_PropElement::StaticClass(), SpawnLocation);
+					int randomModel = m_random.RandRange(0, m_dataTemp.subModelsMedium.Num() - 1);
+					m_spawnProp->setPropertiesProp(m_dataTemp.subModelsMedium[randomModel].radius, m_dataTemp.subModelsMedium[randomModel].subRadius, *m_dataTemp.subModelsMedium[randomModel].path, FVector(i, j, 0.0f), m_imageHeight, m_imageWidth, &m_random, m_dataTemp.subModelsMedium[randomModel].flat);
+					m_props.Add(m_spawnProp);
+
+					smallRadius = m_spawnProp->getRadiusPlacement() - m_spawnProp->getRadiusPlacementGradient();
+					for (int k = m_spawnProp->getCenterPlacement().X - smallRadius; k < m_spawnProp->getCenterPlacement().X + smallRadius; k++)
+						for (int l = m_spawnProp->getCenterPlacement().Y - smallRadius; l < m_spawnProp->getCenterPlacement().Y + smallRadius; l++)
+							placeAvailable[k * m_imageWidth + l] = false;  //Unavailable to place a structure on point
+				}
+				else //Small
+				{
+					if (perlinValue > m_thresholdSmall && m_probabilitySmall > rand)
+					{
+						m_spawnProp = GetWorld()->SpawnActor<AC_PropElement>(AC_PropElement::StaticClass(), SpawnLocation);
+						int randomModel = m_random.RandRange(0, m_dataTemp.subModelsSmall.Num() - 1);
+						m_spawnProp->setPropertiesProp(m_dataTemp.subModelsSmall[randomModel].radius, m_dataTemp.subModelsSmall[randomModel].subRadius, *m_dataTemp.subModelsSmall[randomModel].path, FVector(i, j, 0.0f), m_imageHeight, m_imageWidth, &m_random, m_dataTemp.subModelsSmall[randomModel].flat);
+						m_props.Add(m_spawnProp);
+						smallRadius = m_spawnProp->getRadiusPlacement() - m_spawnProp->getRadiusPlacementGradient();
+						for (int k = m_spawnProp->getCenterPlacement().X - smallRadius; k < m_spawnProp->getCenterPlacement().X + smallRadius; k++)
+							for (int l = m_spawnProp->getCenterPlacement().Y - smallRadius; l < m_spawnProp->getCenterPlacement().Y + smallRadius; l++)
+								placeAvailable[k * m_imageWidth + l] = false;  //Unavailable to place a structure on point
+					}
+				}
+
+				
+			}
+			perlinY += m_placeProps;
+		}
+		perlinY = initPerlinY;
+		perlinX += m_placeProps;
 	}
 
 
-	if (m_dataTemp.subModelsSmall.Num() > 0)
-	{
-		m_props.Add(GetWorld()->SpawnActor<AC_PropElement>(AC_PropElement::StaticClass(), SpawnLocation));
-		m_spawnProp = m_props[m_props.Num() - 1];
-		m_spawnProp->setPropertiesProp(m_dataTemp.subModelsSmall[0].radius, m_dataTemp.subModelsSmall[0].subRadius, *m_dataTemp.subModelsSmall[0].path, FVector(100.0f, 0.0f, 0.0f));
-
-	}*/
+	delete[] placeAvailable;
 }
 
 void AC_LandscapeGenerator::createSurfaceProps()
 {
-	FVector centerPoint(0.0f);
-	float radius = 50.0f;
+	
 	for (AC_PropElement* elt : m_props)
 	{
 
 		//UE_LOG(LogTemp, Warning, TEXT(" %s   :  %f  %f  %f"), *elt->getModelPath(), elt->getCenterPlacement().X, elt->getCenterPlacement().Y, elt->getCenterPlacement().Z);
-		FVector correctedCenter(0.0f);
-		
-		
-		
-		centerPoint = elt->getCenterPlacement();
+		FVector correctedCenter = elt->getCenterPlacement();
 
-		if (centerPoint.X > m_imageHeight || centerPoint.Y > m_imageWidth || centerPoint.X < 0 || centerPoint.Y < 0 && elt != nullptr)
+
+
+		if (correctedCenter.X > m_imageHeight || correctedCenter.Y > m_imageWidth || correctedCenter.X < 0 || correctedCenter.Y < 0 && elt != nullptr)
 		{
 			elt->Destroy();
 			continue;
 		}
-
-		radius = elt->getRadiusPlacement();
-
-
-		float gradientLevel = elt->getRadiusPlacementGradient();
-
-
-	
-		if (centerPoint.X + radius >= m_imageHeight || centerPoint.X - radius < 0.0f)
-		{ 
-			if (centerPoint.X + radius >= m_imageHeight)
-			{
-				correctedCenter.X = m_imageHeight - radius - 1.0f;
-			}
-			else
-			{
-				correctedCenter.X = radius + 1.0f;
-			}
-		}
-		else
-		{ 
-			correctedCenter.X = centerPoint.X;
-		}
-
-		if (centerPoint.Y + radius >= m_imageWidth || centerPoint.Y - radius < 0.0f)
+		if(elt->isFlatGround())
 		{
-			if (centerPoint.Y + radius >= m_imageWidth)
+			float radius = elt->getRadiusPlacement();
+
+
+			float gradientLevel = elt->getRadiusPlacementGradient();
+
+
+
+
+			UE_LOG(LogTemp, Warning, TEXT(" %s   :  %f  %f  %f"), *elt->getModelPath(), elt->getCenterPlacement().X, elt->getCenterPlacement().Y, elt->getCenterPlacement().Z);
+
+
+			std::vector<float> zValues;
+			for (float i = correctedCenter.X - radius; i < correctedCenter.X + radius; i += 1.0f)
 			{
-				correctedCenter.Y = m_imageWidth - radius - 1.0f;
-			}
-			else
-			{
-				correctedCenter.Y = radius + 1.0f;
-			}
-		}
-		else
-		{
-			correctedCenter.Y = centerPoint.Y;
-		}
-
-
-
-
-		elt->setCenter(correctedCenter);
-		UE_LOG(LogTemp, Warning, TEXT(" %s   :  %f  %f  %f"), *elt->getModelPath(), elt->getCenterPlacement().X, elt->getCenterPlacement().Y, elt->getCenterPlacement().Z);
-
-
-		std::vector<float> zValues;
-		for (float i = correctedCenter.X - radius; i < correctedCenter.X + radius; i+= 1.0f)
-		{
-			for (float j = correctedCenter.Y - radius; j < correctedCenter.Y + radius; j++)
-			{
-				if (FMath::Pow(i - correctedCenter.X, 2) + FMath::Pow(j - correctedCenter.Y, 2) <= radius)
+				for (float j = correctedCenter.Y - radius; j < correctedCenter.Y + radius; j++)
 				{
-					zValues.push_back(centerPoint.Z);
+					if (FMath::Pow(i - correctedCenter.X, 2) + FMath::Pow(j - correctedCenter.Y, 2) <= radius)
+					{
+						int index = static_cast<int>(i) * m_imageWidth + static_cast<int>(j);
+						zValues.push_back(m_heightMap[index]);
+					}
 				}
 			}
-		}
 
-		float sum = 0.0f;
-		float numberElements = 0.0f;
-		for (float element : zValues)
-		{
-			sum += element;
-			numberElements += 1.0f;
-		}
-		float averageValue = sum / numberElements;
-
-		for (float i = correctedCenter.X - radius; i < correctedCenter.X + radius; i += 1.0f)
-		{
-			for (float j = correctedCenter.Y - radius; j < correctedCenter.Y + radius; j++)
+			float sum = 0.0f;
+			float numberElements = 0.0f;
+			for (float element : zValues)
 			{
-				//UE_LOG(LogTemp, Warning, TEXT("%f    %f     value"), i, j);
-			
-				float d = FMath::Pow(correctedCenter.X - i, 2) + FMath::Pow(correctedCenter.Y - j, 2);
-				if ( d <= FMath::Pow(radius,2))
+				sum += element;
+				numberElements += 1.0f;
+			}
+			float averageValue = sum / numberElements;
+
+			for (float i = correctedCenter.X - radius; i < correctedCenter.X + radius; i += 1.0f)
+			{
+				for (float j = correctedCenter.Y - radius; j < correctedCenter.Y + radius; j++)
 				{
-					int index = i * m_imageWidth + j;
-					float gradCoeff = FMath::TruncToFloat(FMath::Sqrt(d)) / radius;
-					//m_vertexColors[index] = FColor(255.0f  - 255.0f * gradCoeff, 0, 0, 0);
-					if (d > FMath::Pow(radius - gradientLevel, 2) && (radius - gradientLevel > 0))
+					//UE_LOG(LogTemp, Warning, TEXT("%f    %f     value"), i, j);
+
+					float d = FMath::Pow(correctedCenter.X - i, 2) + FMath::Pow(correctedCenter.Y - j, 2);
+					if (d <= FMath::Pow(radius, 2))
 					{
-						float coef = radius - FMath::TruncToFloat(FMath::Sqrt(d));
-						float z = m_vertices[index].Z + (( averageValue - m_vertices[index].Z ) * (coef / gradientLevel));
-						float r = 255.0f * (coef / gradientLevel);
-						m_vertexColors[index] = FColor(r, 0, 0, 0);
+						int index = i * m_imageWidth + j;
 
-						m_vertices[index] = FVector(m_vertices[index].X, m_vertices[index].Y, z);
-						m_heightMap[index] = z;
-					}
-					else
-					{
+						float gradCoeff = FMath::TruncToFloat(FMath::Sqrt(d)) / radius;
+						//m_vertexColors[index] = FColor(255.0f  - 255.0f * gradCoeff, 0, 0, 0);
+						if (d > FMath::Pow(radius - gradientLevel, 2) && (radius - gradientLevel > 0))
+						{
+							float coef = radius - FMath::TruncToFloat(FMath::Sqrt(d));
+							float z = m_vertices[index].Z + ((averageValue - m_vertices[index].Z) * (coef / gradientLevel));
+							float r = 255.0f * (coef / gradientLevel);
+							m_vertexColors[index] = FColor(r, 0, 0, 0);
 
-						m_vertexColors[index] = FColor(255, 0, 0, 0);
+							m_vertices[index] = FVector(m_vertices[index].X, m_vertices[index].Y, z);
 
-						m_vertices[index] = FVector(m_vertices[index].X, m_vertices[index].Y, averageValue);
-						m_heightMap[index] = averageValue;
 
+							m_heightMap[index] = z;
+						}
+						else
+						{
+
+							m_vertexColors[index] = FColor(255, 0, 0, 0);
+
+							m_vertices[index] = FVector(m_vertices[index].X, m_vertices[index].Y, averageValue);
+							m_heightMap[index] = averageValue;
+
+						}
 					}
 				}
 			}
@@ -481,10 +589,11 @@ void AC_LandscapeGenerator::createSurfaceProps()
 
 
 		int centerZ = elt->getCenterX() * m_imageWidth + elt->getCenterY();
-		FVector v(elt->getCenterPlacement().X * m_triangleSize , elt->getCenterPlacement().Y * m_triangleSize, m_heightMap[centerZ]);
-		elt->SetActorLocation(v + GetActorLocation());
+		FVector v(elt->getCenterPlacement().X * m_triangleSize , elt->getCenterPlacement().Y * m_triangleSize, m_heightMap[centerZ] + 20);
+		//elt->SetActorLocation(v + GetActorLocation());
+		elt->SetActorLocation(v);
 
-		//UE_LOG(LogTemp, Warning, TEXT(" %s   :  %f  %f  %f"), *elt->getModelPath(), v.X, v.Y, m_heightMap[centerZ]);
+		UE_LOG(LogTemp, Warning, TEXT(" %s   :  %f  %f  %f"), *elt->getModelPath(), v.X, v.Y, m_heightMap[centerZ]);
 	}
 
 	FVector* normalsFaces = new FVector[m_imageWidth * m_imageHeight];
@@ -531,6 +640,17 @@ void AC_LandscapeGenerator::createSurfaceProps()
 			FVector vec = normalsFaces[i * m_imageWidth + j];
 			vec.Normalize();
 			m_normals[i * m_imageWidth + j] = vec;
+		}
+	}
+
+	for (AC_PropElement* elt : m_props)
+	{
+
+		if (!elt->isFlatGround())
+		{
+			unsigned int index = elt->getCenterPlacement().X * m_imageWidth + elt->getCenterPlacement().Y;
+			FVector vectorRotation = (FVector(0.0f, 0.0f, 1.0f) + m_normals[index]) * m_coeffOrientation;
+			elt->setRotation(vectorRotation.Rotation());
 		}
 	}
 

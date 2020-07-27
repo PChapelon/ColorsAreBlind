@@ -14,7 +14,7 @@ class COLORSAREBLIND_API AC_PropElement : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AC_PropElement();
-	void setPropertiesProp(float radius, float radiusGradient, FString path, FVector center, FVector scale = FVector(1.0f) );
+	void setPropertiesProp(float radius, float radiusGradient, FString path, FVector center,  unsigned int heightImage, unsigned int widthImage, FRandomStream* random, bool flat = true, FVector scale = FVector(1.0f));
 	
 	float getRadiusPlacement();
 	
@@ -27,6 +27,10 @@ public:
 	float getCenterY();
 
 	void setCenterZ(float z);
+
+	void setRotation(FRotator rotation);
+
+	bool isFlatGround();
 
 	FString getModelPath();
 
@@ -46,6 +50,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "Mesh")
 		FString m_pathToObject;
+
+	UPROPERTY(VisibleAnywhere, Category = "Ground")
+		bool m_flatGround = true;
 
 protected:
 	// Called when the game starts or when spawned
