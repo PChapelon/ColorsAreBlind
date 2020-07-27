@@ -138,8 +138,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "SettingsLandscape")
 		unsigned int m_imageHeight = 200;
 
-	UPROPERTY(EditAnywhere, Category = "SettingsLandscape")
-		unsigned int  m_gradiantLevel = 10.0f;
+	/*UPROPERTY(EditAnywhere, Category = "SettingsLandscape")
+		unsigned int  m_gradiantLevel = 10.0f;*/
 
 	UPROPERTY(EditAnywhere, Category = "SettingsLandscape")
 		unsigned int  m_triangleSize = 50;
@@ -155,13 +155,18 @@ public:
 
 	UPROPERTY()
 		TArray<AC_PropElement*> m_props;
+
 	UPROPERTY()
 		FRandomStream m_random;
+	
+	UPROPERTY()
+		float m_REFERENCE_CIRCLE = 50.0f;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	void generateLandscape();
+	float conversionRelativeTriangleSize(float radius);
 
 
 	//Variables
