@@ -80,10 +80,13 @@ AC_LandscapeGenerator::AC_LandscapeGenerator()
 				if (FolderDirectoryModel[j] == "Main")
 				{
 					temporaryDataStruct->mainModel = { FilesModel[k], pathToModel, true, 40.0f, 10.0f };
+					m_numberTargets += 1.0f;
+
 				}
 				else if (FolderDirectoryModel[j] == "SubModelMedium")
 				{
 					temporaryDataStruct->subModelsMedium.Add({ FilesModel[k], pathToModel, true, 20.0f, 14.0f });
+					m_numberTargets += 1.0f;
 				}
 				else
 				{
@@ -92,7 +95,6 @@ AC_LandscapeGenerator::AC_LandscapeGenerator()
 			}
 		}
 	}
-
 
 
 
@@ -144,6 +146,12 @@ void AC_LandscapeGenerator::BeginPlay()
 void AC_LandscapeGenerator::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (m_numberCompletedTargets >= m_numberTargets)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%f     completed"), m_numberCompletedTargets);
+		UE_LOG(LogTemp, Warning, TEXT("%f     total"), m_numberTargets);
+		UE_LOG(LogTemp, Warning, TEXT(" Enddddd     total"), m_numberTargets);
+	}
 }
 
 
@@ -673,5 +681,36 @@ void AC_LandscapeGenerator::createSurfaceProps()
 float AC_LandscapeGenerator::conversionRelativeTriangleSize(float radius)
 {
 	return FMath::RoundToFloat( radius * (m_REFERENCE_CIRCLE / static_cast<float>(m_triangleSize)));
+}
+
+void AC_LandscapeGenerator::increaseMaterialSaturation()
+{
+	float f; 
+	
+	m_materialDynamic->GetScalarParameterValue(FName(TEXT("desaturation")), f);
+	f -= (1.0f / m_numberTargets);
+	m_materialDynamic->SetScalarParameterValue(FName(TEXT("desaturation")), f);
+
+}
+
+void AC_LandscapeGenerator::decreaseMaterialSaturation()
+{
+	float f;
+	m_materialDynamic->GetScalarParameterValue(FName(TEXT("desaturation")), f);
+
+	f += (1.0f / m_numberTargets);
+	m_materialDynamic->SetScalarParameterValue(FName(TEXT("desaturation")), f);
+
+}
+
+void AC_LandscapeGenerator::increaseCompletedTarget()
+{
+	m_numberCompletedTargets += 1.0f;
+}
+
+void AC_LandscapeGenerator::decreaseCompletedTarget()
+{
+	m_numberCompletedTargets -= 1.0f;
+
 }
 

@@ -115,7 +115,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "SettingsWorld")
 		float m_coeffOrientation = 1.0f / 2.0f;
 
+	UPROPERTY(EditAnywhere, Category = "Target")
+		float m_numberTargets = 0.0f;
 
+	UPROPERTY(EditAnywhere, Category = "Target")
+		float m_numberCompletedTargets = 0.0f;
 
 	
 	UPROPERTY(EditAnywhere, Category = "SettingsLandscape")
@@ -182,6 +186,13 @@ protected:
 	int32* m_distributionMap;
 
 public:	
+
+
+	void increaseMaterialSaturation();
+	void decreaseMaterialSaturation();
+
+	void increaseCompletedTarget();
+	void decreaseCompletedTarget();
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 

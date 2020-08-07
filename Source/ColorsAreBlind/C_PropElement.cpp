@@ -3,7 +3,8 @@
 
 #include "C_PropElement.h"
 #include "Components/CapsuleComponent.h"
-
+#include "C_LandscapeGenerator.h"
+#include "Kismet/GameplayStatics.h"
 // Sets default values
 AC_PropElement::AC_PropElement() 
 {
@@ -70,8 +71,11 @@ void AC_PropElement::setPropertiesProp(float radius, float radiusTrigger, float 
 
 	m_dynamicMaterial = UMaterialInstanceDynamic::Create(m_mesh->GetMaterial(0), this);
 	m_mesh->SetMaterial(0, m_dynamicMaterial);
-	if(!m_flatGround)
+	if (!m_flatGround)
+	{
 		m_dynamicMaterial->SetScalarParameterValue(FName(TEXT("desaturation")), 0.0f);
+		m_isCompleted = true;
+	}
 
 	FVector correctedCenter;
 	if (m_center.X + radius >= heightImage || m_center.X - radius < 0.0f)
@@ -134,6 +138,15 @@ void AC_PropElement::Tick(float DeltaTime)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("completed"));
 			m_isCompleted = true;
+			TArray<AActor*> actorsFound;
+			UGameplayStatics::GetAllActorsOfClass(GetWorld(), AC_LandscapeGenerator::StaticClass(), actorsFound);
+			AC_LandscapeGenerator* landscapeTemporary = (AC_LandscapeGenerator*) actorsFound[0];
+			landscapeTemporary->increaseMaterialSaturation();
+
+			landscapeTemporary->increaseCompletedTarget();
+			UE_LOG(LogTemp, Warning, TEXT("%f     completed"), landscapeTemporary->m_numberCompletedTargets);
+			UE_LOG(LogTemp, Warning, TEXT("%f     total"), landscapeTemporary->m_numberTargets);
+
 		}
 	}
 
@@ -148,11 +161,6 @@ void AC_PropElement::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor*
 	{
 		if (OtherActor->ActorHasTag("Player"))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("%f radi "), m_radiusTrigger);
-			UE_LOG(LogTemp, Warning, TEXT("%f radifrom "), m_trigger->GetUnscaledCapsuleRadius());
-			UE_LOG(LogTemp, Warning, TEXT("%f radifromhalf"), m_trigger->GetUnscaledCapsuleHalfHeight());
-			UE_LOG(LogTemp, Warning, TEXT("%s name "), *OtherActor->GetName());
-
 			m_isInside = true;
 
 		}
@@ -168,7 +176,6 @@ void AC_PropElement::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* O
 	{
 		if (OtherActor->ActorHasTag("Player"))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("%s name "), *OtherActor->GetName());
 			m_isInside = false;
 
 		}
