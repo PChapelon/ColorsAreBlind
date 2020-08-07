@@ -33,6 +33,7 @@ struct  FWorldDataStruct
 	GENERATED_BODY()
 public:
 	FString name;
+	FString nameCamelCase;
 	float amplitudeMin;
 	float amplitudeMax;
 	FWorldModel mainModel;

@@ -2,6 +2,7 @@
 
 
 #include "C_PropElement.h"
+#include "Components/CapsuleComponent.h"
 
 // Sets default values
 AC_PropElement::AC_PropElement() 
@@ -14,19 +15,40 @@ AC_PropElement::AC_PropElement()
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	m_mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshProps"));
 	m_mesh->SetupAttachment(RootComponent);
+	m_mesh->SetRelativeScale3D(FVector(1.0f));
+	m_mesh->SetWorldScale3D(FVector(1.0f));
+	m_trigger = CreateDefaultSubobject<UCapsuleComponent>(TEXT("TriggerProps"));
+	m_trigger->SetCollisionProfileName(TEXT("TriggerCollision"));
+	m_trigger->SetRelativeScale3D(FVector(1.0f));
+	m_trigger->SetWorldScale3D(FVector(1.0f));
+	m_trigger->OnComponentBeginOverlap.AddDynamic(this, &AC_PropElement::OnOverlapBegin);
+	m_trigger->OnComponentEndOverlap.AddDynamic(this, &AC_PropElement::OnOverlapEnd);
+
+	m_trigger->InitCapsuleSize(1.0f, 1.0f);
+	m_trigger->SetupAttachment(RootComponent);
+	
+	
 }
 
-void AC_PropElement::setPropertiesProp(float radius, float radiusGradient, FString path, FVector center, unsigned int heightImage, unsigned int widthImage, FRandomStream* random, bool flat, FVector scale )
+void AC_PropElement::setPropertiesProp(float radius, float radiusTrigger, float radiusGradient, FString path, FVector center, unsigned int heightImage, unsigned int widthImage, FRandomStream* random, bool flat, FVector scale )
 {
 
 	m_radiusPlacement = radius;
+
+
 	m_radiusPlacementGradient = radius * 2/3 < radiusGradient ? radius * 2/3 : radiusGradient;
+
+	m_radiusTrigger = radiusTrigger;
 	
 	m_pathToObject = path;
 	m_center = center;
 
 	m_flatGround = flat;
 
+	m_trigger->SetVisibility(true);
+	
+	m_trigger->SetCapsuleRadius(m_radiusTrigger);
+	m_trigger->SetCapsuleHalfHeight(m_radiusTrigger);
 	FStringAssetReference meshFinder(m_pathToObject);
 	UStaticMesh* meshObject = Cast<UStaticMesh>(meshFinder.TryLoad());
 
@@ -40,10 +62,16 @@ void AC_PropElement::setPropertiesProp(float radius, float radiusGradient, FStri
 		m_mesh->SetRelativeRotation(rotatorRandom);
 		if(!m_flatGround)
 			m_mesh->SetRelativeRotation(FQuat(FVector(0,1,0), PI/2));
-		m_mesh->SetWorldScale3D(scale);
-		m_mesh->SetRelativeScale3D(scale);
-		SetActorScale3D(scale);
+		FVector scale3D(random->FRandRange(0.85f, 1.15f));
+		m_mesh->SetWorldScale3D(scale3D);
+		m_mesh->SetRelativeScale3D(scale3D);
+		SetActorScale3D(scale3D);
 	}
+
+	m_dynamicMaterial = UMaterialInstanceDynamic::Create(m_mesh->GetMaterial(0), this);
+	m_mesh->SetMaterial(0, m_dynamicMaterial);
+	if(!m_flatGround)
+		m_dynamicMaterial->SetScalarParameterValue(FName(TEXT("desaturation")), 0.0f);
 
 	FVector correctedCenter;
 	if (m_center.X + radius >= heightImage || m_center.X - radius < 0.0f)
@@ -86,14 +114,68 @@ void AC_PropElement::setPropertiesProp(float radius, float radiusGradient, FStri
 void AC_PropElement::BeginPlay()
 {
 	Super::BeginPlay();	
+	
 }
 
 // Called every frame
 void AC_PropElement::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (!m_isCompleted && m_isInside )
+	{
+		float f;
+		m_dynamicMaterial->GetScalarParameterValue(FName(TEXT("desaturation")), f);
+
+		f -= 0.01f;
+		m_dynamicMaterial->SetScalarParameterValue(FName(TEXT("desaturation")), f);
+
+
+		if (f <= 0.0f)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("completed"));
+			m_isCompleted = true;
+		}
+	}
 
 }
+
+
+void AC_PropElement::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+//void AC_PropElement::OnOverlapBegin(AActor* OverlappedActor, AActor* OtherActor)
+{
+
+	if (OtherActor && (OtherActor != this) )
+	{
+		if (OtherActor->ActorHasTag("Player"))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%f radi "), m_radiusTrigger);
+			UE_LOG(LogTemp, Warning, TEXT("%f radifrom "), m_trigger->GetUnscaledCapsuleRadius());
+			UE_LOG(LogTemp, Warning, TEXT("%f radifromhalf"), m_trigger->GetUnscaledCapsuleHalfHeight());
+			UE_LOG(LogTemp, Warning, TEXT("%s name "), *OtherActor->GetName());
+
+			m_isInside = true;
+
+		}
+	}
+}
+
+void AC_PropElement::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+//void AC_PropElement::OnOverlapEnd(AActor* OverlappedActor, AActor* OtherActor)
+
+{
+
+	if (OtherActor && (OtherActor != this) )
+	{
+		if (OtherActor->ActorHasTag("Player"))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s name "), *OtherActor->GetName());
+			m_isInside = false;
+
+		}
+
+	}
+}
+
 
 void AC_PropElement::setRotation(FRotator rotation)
 {
@@ -103,6 +185,11 @@ void AC_PropElement::setRotation(FRotator rotation)
 bool AC_PropElement::isFlatGround()
 {
 	return m_flatGround;
+}
+
+bool AC_PropElement::isCompleted()
+{
+	return m_isCompleted;
 }
 
 float AC_PropElement::getRadiusPlacement()

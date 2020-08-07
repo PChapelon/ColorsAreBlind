@@ -62,6 +62,7 @@ AC_Player::AC_Player() : m_speedMovement(10.0f), m_speedRotation(0.1f), m_spring
 	m_camera->SetRelativeRotation(rotation);
 	m_camera->bEditableWhenInherited = false;
 
+	Tags.Add("Player");
 	
 
 }
