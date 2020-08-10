@@ -15,13 +15,15 @@ AC_PropElement::AC_PropElement()
 	m_pathToObject = FString("/Game/Models/Temple/temple.temple");
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	m_mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshProps"));
-	m_mesh->SetupAttachment(RootComponent);
 	m_mesh->SetRelativeScale3D(FVector(1.0f));
 	m_mesh->SetWorldScale3D(FVector(1.0f));
+	m_mesh->SetupAttachment(RootComponent);
+
 	m_trigger = CreateDefaultSubobject<UCapsuleComponent>(TEXT("TriggerProps"));
 	m_trigger->SetCollisionProfileName(TEXT("TriggerCollision"));
 	m_trigger->SetRelativeScale3D(FVector(1.0f));
 	m_trigger->SetWorldScale3D(FVector(1.0f));
+	m_trigger->SetRelativeScale3D(FVector(1.0f));
 	m_trigger->OnComponentBeginOverlap.AddDynamic(this, &AC_PropElement::OnOverlapBegin);
 	m_trigger->OnComponentEndOverlap.AddDynamic(this, &AC_PropElement::OnOverlapEnd);
 

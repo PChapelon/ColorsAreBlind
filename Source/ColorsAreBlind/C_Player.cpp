@@ -34,12 +34,23 @@ AC_Player::AC_Player() : m_speedMovement(10.0f), m_speedRotation(0.1f), m_spring
 	RootComponent->bEditableWhenInherited = true;
 	m_playerCollision->bEditableWhenInherited = true;
 
-	m_playerMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshPlayer"));
-	m_playerMesh->SetupAttachment(RootComponent);
+
+	m_meshContainer = CreateDefaultSubobject<USceneComponent>(TEXT("MeshContainer"));
+	m_meshContainer->SetupAttachment(RootComponent); 
+
+	m_playerMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshPlayer"));
+	m_playerMesh->SetupAttachment(m_meshContainer);
 	m_playerMesh->bEditableWhenInherited = true;
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> meshLoader(TEXT("/Engine/BasicShapes/Cube.Cube"));
+	m_playerMesh->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+	
+	static ConstructorHelpers::FObjectFinder<UAnimationAsset> animationLoader(TEXT("/Game/Models/PLAYER/personnage_Anim.personnage_Anim"));
+	if (animationLoader.Succeeded()) {
+		m_playerMesh->AnimationData.AnimToPlay = animationLoader.Object;
+	}
+	//static ConstructorHelpers::FObjectFinder<UStaticMesh> meshLoader(TEXT("/Engine/BasicShapes/Cube.Cube"));
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> meshLoader(TEXT("/Game/Models/PLAYER/personnage.personnage"));
 	if (meshLoader.Succeeded()) {
-		m_playerMesh->SetStaticMesh(meshLoader.Object);
+		m_playerMesh->SetSkeletalMesh(meshLoader.Object);
 		m_playerMesh->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
 		m_playerMesh->SetWorldScale3D(FVector(1.f));		
 	}
@@ -78,6 +89,7 @@ void AC_Player::BeginPlay()
 	Super::BeginPlay();
 
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
+	//m_playerMesh->PlayAnimation()
 }
 
 // Called every frame
@@ -87,11 +99,9 @@ void AC_Player::Tick(float DeltaTime)
 
 	if (!m_currentVelocity.IsZero())
 	{
-		// FVector positionMovement = GetActorLocation() + (m_currentVelocity * DeltaTime);
-		// SetActorLocation(positionMovement);
-
 		m_forwardRotator = FMath::Lerp(m_forwardRotator, m_currentVelocity.Rotation(), m_speedRotation);
-		m_playerMesh->SetWorldRotation(m_forwardRotator);
+		m_meshContainer->SetWorldRotation(m_forwardRotator );
+		
 	}
 }
 

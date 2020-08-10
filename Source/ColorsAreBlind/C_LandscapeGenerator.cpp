@@ -51,6 +51,10 @@ AC_LandscapeGenerator::AC_LandscapeGenerator()
 	for (int i = 0; i < FolderWorld.Num(); i++)
 	{
 		FString PathCurrentWorld = FullFilePath + FolderWorld[i];
+		if (FolderWorld[i] == "PLAYER")
+		{
+			continue;
+		}
 		FString PathModelDirectory = PathCurrentWorld + "/*";
 		FPaths::NormalizeDirectoryName(PathModelDirectory);
 		TArray<FString> FolderDirectoryModel;
@@ -80,13 +84,11 @@ AC_LandscapeGenerator::AC_LandscapeGenerator()
 				if (FolderDirectoryModel[j] == "Main")
 				{
 					temporaryDataStruct->mainModel = { FilesModel[k], pathToModel, true, 40.0f, 10.0f };
-					m_numberTargets += 1.0f;
 
 				}
 				else if (FolderDirectoryModel[j] == "SubModelMedium")
 				{
 					temporaryDataStruct->subModelsMedium.Add({ FilesModel[k], pathToModel, true, 20.0f, 14.0f });
-					m_numberTargets += 1.0f;
 				}
 				else
 				{
@@ -329,6 +331,7 @@ void AC_LandscapeGenerator::fillPropsRelative()
 	m_spawnProp->setPropertiesProp(convertedRadius, (convertedRadius - conversionRelativeTriangleSize(m_dataTemp.mainModel.subRadius)) * m_triangleSize, conversionRelativeTriangleSize(m_dataTemp.mainModel.subRadius), *m_dataTemp.mainModel.path, FVector(positionMain.X, positionMain.Y, 0.0f), m_imageHeight, m_imageWidth, &m_random);
 	//UE_LOG(LogTemp, Warning, TEXT("%f    conversion"), m_spawnProp->getRadiusPlacement());
 	m_props.Add(m_spawnProp);
+	m_numberTargets += 1.0f;
 
 	float smallRadius = m_spawnProp->getRadiusPlacement() - m_spawnProp->getRadiusPlacementGradient();
 	for (int i = m_spawnProp->getCenterPlacement().X - m_spawnProp->getRadiusPlacement(); i < m_spawnProp->getCenterPlacement().X + m_spawnProp->getRadiusPlacement(); i++)
@@ -365,7 +368,7 @@ void AC_LandscapeGenerator::fillPropsRelative()
 					convertedRadius = conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].radius);
 					m_spawnProp->setPropertiesProp(convertedRadius, (convertedRadius - conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].subRadius)) * m_triangleSize, conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].subRadius), *m_dataTemp.subModelsMedium[randomModel].path, FVector(i, j, 0.0f), m_imageHeight, m_imageWidth, &m_random, m_dataTemp.subModelsMedium[randomModel].flat);
 					m_props.Add(m_spawnProp);
-
+					m_numberTargets += 1.0f;
 					smallRadius = m_spawnProp->getRadiusPlacement() - m_spawnProp->getRadiusPlacementGradient();
 					for (int k = m_spawnProp->getCenterPlacement().X - m_spawnProp->getRadiusPlacement(); k < m_spawnProp->getCenterPlacement().X + m_spawnProp->getRadiusPlacement(); k++)
 						for (int l = m_spawnProp->getCenterPlacement().Y - m_spawnProp->getRadiusPlacement(); l < m_spawnProp->getCenterPlacement().Y + m_spawnProp->getRadiusPlacement(); l++)
@@ -454,6 +457,7 @@ void AC_LandscapeGenerator::fillPropsPerlin()
 	float convertedRadius = conversionRelativeTriangleSize(m_dataTemp.mainModel.radius);
 	m_spawnProp->setPropertiesProp(convertedRadius, (convertedRadius - conversionRelativeTriangleSize(m_dataTemp.mainModel.subRadius)) * m_triangleSize, conversionRelativeTriangleSize(m_dataTemp.mainModel.subRadius), *m_dataTemp.mainModel.path, FVector(positionMain.X, positionMain.Y, 0.0f), m_imageHeight, m_imageWidth, &m_random);
 	m_props.Add(m_spawnProp);
+	m_numberTargets += 1.0f;
 
 	float smallRadius = m_spawnProp->getRadiusPlacement() - m_spawnProp->getRadiusPlacementGradient();
 	for (int i = m_spawnProp->getCenterPlacement().X - smallRadius ; i < m_spawnProp->getCenterPlacement().X + smallRadius; i++)
@@ -481,6 +485,8 @@ void AC_LandscapeGenerator::fillPropsPerlin()
 					convertedRadius = conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].radius);
 					m_spawnProp->setPropertiesProp(convertedRadius, (convertedRadius - conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].subRadius)) * m_triangleSize, conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].subRadius), *m_dataTemp.subModelsMedium[randomModel].path, FVector(i, j, 0.0f), m_imageHeight, m_imageWidth, &m_random, m_dataTemp.subModelsMedium[randomModel].flat);
 					m_props.Add(m_spawnProp);
+					
+					m_numberTargets += 1.0f;
 
 					smallRadius = m_spawnProp->getRadiusPlacement() - m_spawnProp->getRadiusPlacementGradient();
 					for (int k = m_spawnProp->getCenterPlacement().X - smallRadius; k < m_spawnProp->getCenterPlacement().X + smallRadius; k++)

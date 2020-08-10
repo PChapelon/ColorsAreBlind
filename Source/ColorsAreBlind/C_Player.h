@@ -37,8 +37,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Structure")
 		class UCameraComponent* m_camera;
 
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Structure")
-		class UStaticMeshComponent* m_playerMesh;
+		USceneComponent* m_meshContainer;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Structure")
+		class USkeletalMeshComponent* m_playerMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Structure")
 		class UC_MovementComponent* m_playerMovement;
