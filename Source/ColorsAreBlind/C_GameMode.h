@@ -13,5 +13,5 @@ UCLASS()
 class COLORSAREBLIND_API AC_GameMode : public AGameModeBase
 {
 	GENERATED_BODY()
-	
+	AC_GameMode();
 };

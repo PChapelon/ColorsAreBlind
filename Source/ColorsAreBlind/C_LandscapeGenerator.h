@@ -185,12 +185,16 @@ protected:
 	float* m_heightMap;
 	int32* m_distributionMap;
 
+
+
 public:	
 
 
 	void increaseMaterialSaturation();
 	void decreaseMaterialSaturation();
-
+	float* getNumberTargets();
+	float* getNumberCompletedTargets();
+ 
 	void increaseCompletedTarget();
 	void decreaseCompletedTarget();
 	// Called every frame

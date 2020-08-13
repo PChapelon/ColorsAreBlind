@@ -36,6 +36,7 @@ AC_Player::AC_Player() : m_speedMovement(10.0f), m_speedRotation(0.1f), m_spring
 
 
 	m_meshContainer = CreateDefaultSubobject<USceneComponent>(TEXT("MeshContainer"));
+	m_meshContainer->SetRelativeLocation(FVector(0.0f, 0.0f, -50.0f));
 	m_meshContainer->SetupAttachment(RootComponent); 
 
 	m_playerMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshPlayer"));
@@ -74,6 +75,7 @@ AC_Player::AC_Player() : m_speedMovement(10.0f), m_speedRotation(0.1f), m_spring
 	m_camera->bEditableWhenInherited = false;
 
 	Tags.Add("Player");
+
 	
 
 }
@@ -103,6 +105,17 @@ void AC_Player::Tick(float DeltaTime)
 		m_meshContainer->SetWorldRotation(m_forwardRotator );
 		
 	}
+
+	//FVector* animationVector = &m_meshContainer->GetRelativeLocation();
+	FVector animationVector = m_meshContainer->GetRelativeLocation();
+	animationVector.Z = FMath::Cos(m_animationDelta) * 50.0f;
+
+	m_meshContainer->SetRelativeLocation(animationVector);
+	m_animationDelta += 0.1f * m_speedAnimation;
+
+
+	//delete animationVector;
+	
 }
 
 // Called to bind functionality to input

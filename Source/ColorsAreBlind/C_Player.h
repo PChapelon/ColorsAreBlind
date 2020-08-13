@@ -49,6 +49,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Structure")
 		class UBoxComponent* m_playerCollision;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+		float m_animationDelta = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+		float m_speedAnimation = 0.5f;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

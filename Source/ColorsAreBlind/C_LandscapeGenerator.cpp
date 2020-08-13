@@ -720,3 +720,15 @@ void AC_LandscapeGenerator::decreaseCompletedTarget()
 
 }
 
+float* AC_LandscapeGenerator::getNumberTargets()
+{
+	return &m_numberTargets;
+}
+
+float* AC_LandscapeGenerator::getNumberCompletedTargets()
+{
+	return &m_numberCompletedTargets;
+}
+
+
+
