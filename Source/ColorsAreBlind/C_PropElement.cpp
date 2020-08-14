@@ -5,6 +5,10 @@
 #include "Components/CapsuleComponent.h"
 #include "C_LandscapeGenerator.h"
 #include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "Components/AudioComponent.h"
+#include "Sound/SoundCue.h"
+
 // Sets default values
 AC_PropElement::AC_PropElement() 
 {
@@ -30,10 +34,35 @@ AC_PropElement::AC_PropElement()
 	m_trigger->InitCapsuleSize(1.0f, 1.0f);
 	m_trigger->SetupAttachment(RootComponent);
 	
+
+	m_particlesCompleted = CreateDefaultSubobject<UParticleSystemComponent>("ParticlesSystem");
+	m_particlesCompleted->SetupAttachment(m_mesh);
+	m_particlesCompleted->SetRelativeLocation(FVector(0.0f, 0.0f, 90.0f));
+
+	static ConstructorHelpers::FObjectFinder<USoundCue> soundLoader(TEXT("/Game/Sounds/SoundCompletedCue.SoundCompletedCue"));
+	if (soundLoader.Succeeded())
+	{
+		m_audioCompleted = soundLoader.Object;
+		m_audioCompletedComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+		m_audioCompletedComponent->SetupAttachment(RootComponent);
+
+	}
+
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> particlesLoader(TEXT("/Game/Particles/P_SparksMedium.P_SparksMedium"));
+	if (particlesLoader.Succeeded()) {
+		m_particlesToAffectMedium = particlesLoader.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> particlesLoaderMain(TEXT("/Game/Particles/P_SparksMain.P_SparksMain"));
+	if (particlesLoaderMain.Succeeded()) {
+		m_particlesToAffectMain = particlesLoaderMain.Object;
+	}
+	//m_particlesCompleted->Template = m_particlesToAffect;
+	m_particlesCompleted->Deactivate();
+
 	
 }
 
-void AC_PropElement::setPropertiesProp(float radius, float radiusTrigger, float radiusGradient, FString path, FVector center, unsigned int heightImage, unsigned int widthImage, FRandomStream* random, bool flat, FVector scale )
+void AC_PropElement::setPropertiesProp(float radius, float radiusTrigger, float radiusGradient, FString path, FVector center, unsigned int heightImage, unsigned int widthImage, FRandomStream* random, bool flat, bool mainModel, FVector scale )
 {
 
 	m_radiusPlacement = radius;
@@ -73,10 +102,19 @@ void AC_PropElement::setPropertiesProp(float radius, float radiusTrigger, float 
 
 	m_dynamicMaterial = UMaterialInstanceDynamic::Create(m_mesh->GetMaterial(0), this);
 	m_mesh->SetMaterial(0, m_dynamicMaterial);
+
+	
 	if (!m_flatGround)
 	{
 		m_dynamicMaterial->SetScalarParameterValue(FName(TEXT("desaturation")), 0.0f);
 		m_isCompleted = true;
+	}
+	else
+	{
+		if (mainModel)
+			m_particlesCompleted->Template = m_particlesToAffectMain;
+		else
+			m_particlesCompleted->Template = m_particlesToAffectMedium;
 	}
 
 	FVector correctedCenter;
@@ -120,7 +158,11 @@ void AC_PropElement::setPropertiesProp(float radius, float radiusTrigger, float 
 void AC_PropElement::BeginPlay()
 {
 	Super::BeginPlay();	
-	
+	if (m_audioCompletedComponent && m_audioCompleted)
+	{
+		m_audioCompletedComponent->PitchMultiplier = 0.5f;
+		m_audioCompletedComponent->SetSound(m_audioCompleted);
+	}
 }
 
 // Called every frame
@@ -138,16 +180,14 @@ void AC_PropElement::Tick(float DeltaTime)
 
 		if (f <= 0.0f)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("completed"));
 			m_isCompleted = true;
 			TArray<AActor*> actorsFound;
 			UGameplayStatics::GetAllActorsOfClass(GetWorld(), AC_LandscapeGenerator::StaticClass(), actorsFound);
 			AC_LandscapeGenerator* landscapeTemporary = (AC_LandscapeGenerator*) actorsFound[0];
 			landscapeTemporary->increaseMaterialSaturation();
-
 			landscapeTemporary->increaseCompletedTarget();
-			UE_LOG(LogTemp, Warning, TEXT("%f     completed"), landscapeTemporary->m_numberCompletedTargets);
-			UE_LOG(LogTemp, Warning, TEXT("%f     total"), landscapeTemporary->m_numberTargets);
+			m_audioCompletedComponent->Play();
+			m_particlesCompleted->Activate();
 
 		}
 	}

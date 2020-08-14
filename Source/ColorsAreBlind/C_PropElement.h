@@ -14,7 +14,7 @@ class COLORSAREBLIND_API AC_PropElement : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AC_PropElement();
-	void setPropertiesProp(float radius, float radiusTrigger, float radiusGradient, FString path, FVector center,  unsigned int heightImage, unsigned int widthImage, FRandomStream* random, bool flat = true, FVector scale = FVector(1.0f));
+	void setPropertiesProp(float radius, float radiusTrigger, float radiusGradient, FString path, FVector center,  unsigned int heightImage, unsigned int widthImage, FRandomStream* random, bool flat = true, bool mainModel = true, FVector scale = FVector(1.0f));
 	
 	float getRadiusPlacement();
 	
@@ -44,8 +44,23 @@ public:
 	UPROPERTY(EditAnywhere, Category="Material")
 		class UMaterialInstanceDynamic* m_dynamicMaterial;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger")
+		class UParticleSystemComponent* m_particlesCompleted;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger")
+		class UParticleSystem* m_particlesToAffectMedium;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger")
+		class UParticleSystem* m_particlesToAffectMain;
+
 	UPROPERTY(EditAnywhere, Category = "Trigger")
 		class UCapsuleComponent* m_trigger;
+
+	UPROPERTY(EditAnywhere, Category = "Audio")
+		class USoundCue* m_audioCompleted;
+
+	UPROPERTY(EditAnywhere, Category = "Audio")
+		class UAudioComponent* m_audioCompletedComponent;
 
 	UPROPERTY(VisibleAnywhere, Category="Mesh")
 		float m_radiusPlacement;

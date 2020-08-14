@@ -69,6 +69,7 @@ void AC_HUD::PostActorCreated()
 		m_completed = m_landscape->getNumberCompletedTargets();
 		m_targetsTotal = m_landscape->getNumberTargets();
 	}
+	
 }
 
 void AC_HUD::PostLoad()

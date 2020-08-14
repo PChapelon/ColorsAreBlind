@@ -148,11 +148,10 @@ void AC_LandscapeGenerator::BeginPlay()
 void AC_LandscapeGenerator::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
 	if (m_numberCompletedTargets >= m_numberTargets)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%f     completed"), m_numberCompletedTargets);
-		UE_LOG(LogTemp, Warning, TEXT("%f     total"), m_numberTargets);
-		UE_LOG(LogTemp, Warning, TEXT(" Enddddd     total"), m_numberTargets);
+		UGameplayStatics::OpenLevel(this, "ScreenEnd");
 	}
 }
 
@@ -366,7 +365,7 @@ void AC_LandscapeGenerator::fillPropsRelative()
 					//UE_LOG(LogTemp, Warning, TEXT("%d     numberModels"), m_dataTemp.subModelsMedium.Num());
 					//Set properties of the model 
 					convertedRadius = conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].radius);
-					m_spawnProp->setPropertiesProp(convertedRadius, (convertedRadius - conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].subRadius)) * m_triangleSize, conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].subRadius), *m_dataTemp.subModelsMedium[randomModel].path, FVector(i, j, 0.0f), m_imageHeight, m_imageWidth, &m_random, m_dataTemp.subModelsMedium[randomModel].flat);
+					m_spawnProp->setPropertiesProp(convertedRadius, (convertedRadius - conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].subRadius)) * m_triangleSize, conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].subRadius), *m_dataTemp.subModelsMedium[randomModel].path, FVector(i, j, 0.0f), m_imageHeight, m_imageWidth, &m_random, m_dataTemp.subModelsMedium[randomModel].flat, false);
 					m_props.Add(m_spawnProp);
 					m_numberTargets += 1.0f;
 					smallRadius = m_spawnProp->getRadiusPlacement() - m_spawnProp->getRadiusPlacementGradient();
@@ -395,7 +394,7 @@ void AC_LandscapeGenerator::fillPropsRelative()
 					m_spawnProp = GetWorld()->SpawnActor<AC_PropElement>(AC_PropElement::StaticClass(), SpawnLocation);
 					int randomModel = m_random.RandRange(0, m_dataTemp.subModelsMedium.Num() - 1);
 					convertedRadius = conversionRelativeTriangleSize(m_dataTemp.subModelsSmall[randomModel].radius);
-					m_spawnProp->setPropertiesProp(convertedRadius, (convertedRadius - conversionRelativeTriangleSize(m_dataTemp.subModelsSmall[randomModel].subRadius)) * m_triangleSize, conversionRelativeTriangleSize(m_dataTemp.subModelsSmall[randomModel].subRadius), *m_dataTemp.subModelsSmall[randomModel].path, FVector(i, j, 0.0f), m_imageHeight, m_imageWidth, &m_random, m_dataTemp.subModelsSmall[randomModel].flat);
+					m_spawnProp->setPropertiesProp(convertedRadius, (convertedRadius - conversionRelativeTriangleSize(m_dataTemp.subModelsSmall[randomModel].subRadius)) * m_triangleSize, conversionRelativeTriangleSize(m_dataTemp.subModelsSmall[randomModel].subRadius), *m_dataTemp.subModelsSmall[randomModel].path, FVector(i, j, 0.0f), m_imageHeight, m_imageWidth, &m_random, m_dataTemp.subModelsSmall[randomModel].flat, false);
 					m_props.Add(m_spawnProp);
 
 					for (int k = m_spawnProp->getCenterPlacement().X - m_spawnProp->getRadiusPlacement(); k < m_spawnProp->getCenterPlacement().X + m_spawnProp->getRadiusPlacement(); k++)
@@ -483,7 +482,7 @@ void AC_LandscapeGenerator::fillPropsPerlin()
 					m_spawnProp = GetWorld()->SpawnActor<AC_PropElement>(AC_PropElement::StaticClass(), SpawnLocation);
 					int randomModel = m_random.RandRange(0, m_dataTemp.subModelsMedium.Num() - 1);
 					convertedRadius = conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].radius);
-					m_spawnProp->setPropertiesProp(convertedRadius, (convertedRadius - conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].subRadius)) * m_triangleSize, conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].subRadius), *m_dataTemp.subModelsMedium[randomModel].path, FVector(i, j, 0.0f), m_imageHeight, m_imageWidth, &m_random, m_dataTemp.subModelsMedium[randomModel].flat);
+					m_spawnProp->setPropertiesProp(convertedRadius, (convertedRadius - conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].subRadius)) * m_triangleSize, conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].subRadius), *m_dataTemp.subModelsMedium[randomModel].path, FVector(i, j, 0.0f), m_imageHeight, m_imageWidth, &m_random, m_dataTemp.subModelsMedium[randomModel].flat, false);
 					m_props.Add(m_spawnProp);
 					
 					m_numberTargets += 1.0f;
@@ -500,7 +499,7 @@ void AC_LandscapeGenerator::fillPropsPerlin()
 						m_spawnProp = GetWorld()->SpawnActor<AC_PropElement>(AC_PropElement::StaticClass(), SpawnLocation);
 						int randomModel = m_random.RandRange(0, m_dataTemp.subModelsSmall.Num() - 1);
 						convertedRadius = conversionRelativeTriangleSize(m_dataTemp.subModelsSmall[randomModel].radius);
-						m_spawnProp->setPropertiesProp(convertedRadius, (convertedRadius - conversionRelativeTriangleSize(m_dataTemp.subModelsSmall[randomModel].subRadius)) * m_triangleSize, conversionRelativeTriangleSize(m_dataTemp.subModelsSmall[randomModel].subRadius), *m_dataTemp.subModelsSmall[randomModel].path, FVector(i, j, 0.0f), m_imageHeight, m_imageWidth, &m_random, m_dataTemp.subModelsSmall[randomModel].flat);
+						m_spawnProp->setPropertiesProp(convertedRadius, (convertedRadius - conversionRelativeTriangleSize(m_dataTemp.subModelsSmall[randomModel].subRadius)) * m_triangleSize, conversionRelativeTriangleSize(m_dataTemp.subModelsSmall[randomModel].subRadius), *m_dataTemp.subModelsSmall[randomModel].path, FVector(i, j, 0.0f), m_imageHeight, m_imageWidth, &m_random, m_dataTemp.subModelsSmall[randomModel].flat, false);
 						m_props.Add(m_spawnProp);
 						smallRadius = m_spawnProp->getRadiusPlacement() - m_spawnProp->getRadiusPlacementGradient();
 						for (int k = m_spawnProp->getCenterPlacement().X - smallRadius; k < m_spawnProp->getCenterPlacement().X + smallRadius; k++)

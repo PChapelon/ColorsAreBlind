@@ -11,6 +11,7 @@
 #include "C_MovementComponent.h"
 #include "EngineGlobals.h"
 #include "Engine/Engine.h"
+#include "Particles/ParticleSystemComponent.h"
 
 
 
@@ -41,6 +42,8 @@ AC_Player::AC_Player() : m_speedMovement(10.0f), m_speedRotation(0.1f), m_spring
 
 	m_playerMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshPlayer"));
 	m_playerMesh->SetupAttachment(m_meshContainer);
+	m_playerMesh->SetWorldRotation(FQuat(FVector(0, 0, 1), -PI / 12));
+	m_playerMesh->SetWorldRotation(FQuat(FVector(0, 1, 0), - PI / 12));
 	m_playerMesh->bEditableWhenInherited = true;
 	m_playerMesh->SetAnimationMode(EAnimationMode::AnimationSingleNode);
 	
@@ -48,6 +51,18 @@ AC_Player::AC_Player() : m_speedMovement(10.0f), m_speedRotation(0.1f), m_spring
 	if (animationLoader.Succeeded()) {
 		m_playerMesh->AnimationData.AnimToPlay = animationLoader.Object;
 	}
+
+
+	m_particlesPlayer = CreateDefaultSubobject<UParticleSystemComponent>("ParticlesSystem");
+	m_particlesPlayer->SetupAttachment(m_meshContainer);
+	m_particlesPlayer->SetRelativeLocation(FVector(-30.0f, -10.0f, 90.0f));
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> particlesLoader(TEXT("/Game/Particles/P_Glowing.P_Glowing"));
+	if (particlesLoader.Succeeded()) {
+		m_particlesPlayer->Template = particlesLoader.Object;
+		
+	}
+
+	
 	//static ConstructorHelpers::FObjectFinder<UStaticMesh> meshLoader(TEXT("/Engine/BasicShapes/Cube.Cube"));
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> meshLoader(TEXT("/Game/Models/PLAYER/personnage.personnage"));
 	if (meshLoader.Succeeded()) {
@@ -124,9 +139,12 @@ void AC_Player::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	InputComponent->BindAxis("MoveX", this, &AC_Player::MoveOnX);
 	InputComponent->BindAxis("MoveY", this, &AC_Player::MoveOnY);
+	InputComponent->BindAxis("Zoom", this, &AC_Player::ZoomOnPlayer);
 	InputComponent->BindAction("Run", IE_Pressed, this, &AC_Player::Run);
 	InputComponent->BindAction("Run", IE_Released, this, &AC_Player::Walk);
 }
+
+
 
 void AC_Player::Walk()
 {
@@ -150,12 +168,25 @@ void AC_Player::MoveOnX(float value)
 
 void AC_Player::MoveOnY(float value)
 {
+	//UE_LOG(LogTemp, Warning, TEXT("movey"));
+
 	if (m_playerMovement && (m_playerMovement->UpdatedComponent == RootComponent))
 	{
 		m_currentVelocity.Y = FMath::Clamp(value, -1.0f, 1.0f) * 100.0f * m_speedMovement;
 		m_playerMovement->AddInputVector(GetActorRightVector() * value * m_speedMovement * 100.0f);
 	}
 	//m_currentVelocity.Y = FMath::Clamp(value, -1.0f, 1.0f) * 100.0f * m_speedMovement;
+}
+
+void AC_Player::ZoomOnPlayer(float value)
+{
+//	UE_LOG(LogTemp, Warning, TEXT("zooming"));
+	if (m_springArmCamera )
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("%f   zoom "), value);
+
+		m_springArmCamera->TargetArmLength += value;
+	}
 }
 
 float AC_Player::DegreesToRadians(float degrees)

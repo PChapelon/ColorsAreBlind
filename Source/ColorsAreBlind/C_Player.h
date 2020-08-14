@@ -47,13 +47,16 @@ public:
 		class UC_MovementComponent* m_playerMovement;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Structure")
+		class UParticleSystemComponent* m_particlesPlayer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Structure")
 		class UBoxComponent* m_playerCollision;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 		float m_animationDelta = 0.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-		float m_speedAnimation = 0.5f;
+		float m_speedAnimation = 0.3f;
 
 protected:
 	// Called when the game starts or when spawned
@@ -82,6 +85,8 @@ public:
 	void MovePlayerForward();
 
 	void MoveOnY(float value);
+
+	void ZoomOnPlayer(float value);
 
 	virtual UPawnMovementComponent* GetMovementComponent() const override;
 
