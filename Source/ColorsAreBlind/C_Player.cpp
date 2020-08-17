@@ -91,7 +91,13 @@ AC_Player::AC_Player() : m_speedMovement(10.0f), m_speedRotation(0.1f), m_spring
 
 	Tags.Add("Player");
 
-	
+	m_springArmLength = m_springArmCamera->TargetArmLength;
+	m_springArmOffset = m_springArmCamera->SocketOffset.Z;
+	m_anglePlayerCamera = FMath::Sin(m_springArmOffset / m_springArmLength);
+	UE_LOG(LogTemp, Warning, TEXT("%f    springoffset"), m_springArmCamera->SocketOffset.Z);
+	UE_LOG(LogTemp, Warning, TEXT("%f    m_springArmLength"), m_springArmCamera->TargetArmLength);
+	UE_LOG(LogTemp, Warning, TEXT("%f    m_anglePlayerCamera"), m_anglePlayerCamera);
+
 
 }
 
@@ -181,11 +187,14 @@ void AC_Player::MoveOnY(float value)
 void AC_Player::ZoomOnPlayer(float value)
 {
 //	UE_LOG(LogTemp, Warning, TEXT("zooming"));
-	if (m_springArmCamera )
+	if (m_springArmCamera && m_springArmCamera->TargetArmLength + (value * m_speedZoom) > 500.0f && m_springArmCamera->TargetArmLength + (value * m_speedZoom) < m_springArmLength)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("%f   zoom "), value);
+		m_springArmCamera->TargetArmLength += (value * m_speedZoom);
+		m_springArmCamera->SocketOffset = FVector(0, 0, FMath::Sin(m_anglePlayerCamera) * m_springArmCamera->TargetArmLength);
 
-		m_springArmCamera->TargetArmLength += value;
+		UE_LOG(LogTemp, Warning, TEXT("%f    azezaeaspringoffset"), m_springArmCamera->SocketOffset.Z);
+		UE_LOG(LogTemp, Warning, TEXT("%f    m_springArmLength"), m_springArmCamera->TargetArmLength);
+		UE_LOG(LogTemp, Warning, TEXT("%f    m_anglePlayerCamera"), m_anglePlayerCamera);
 	}
 }
 

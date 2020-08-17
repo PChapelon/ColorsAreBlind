@@ -23,8 +23,12 @@ public:
 		float m_speedRotation;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		float m_speedGravity;
-
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+		float m_speedZoom = 3.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+		float m_anglePlayerCamera ;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 		float m_springArmLength;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
