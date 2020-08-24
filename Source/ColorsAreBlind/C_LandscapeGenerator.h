@@ -55,6 +55,12 @@ class COLORSAREBLIND_API AC_LandscapeGenerator : public AActor
 private: 
 	UPROPERTY()
 		TSubclassOf<AActor> m_temp;
+
+	UPROPERTY()
+		float m_currentThresholdDissolve = 1.5f;
+
+	UPROPERTY()
+		float m_maxCurrentThresholdDissolve = 1.5f;
 	
 public:	
 	// Sets default values for this actor's properties
@@ -67,6 +73,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category="Mesh")
 		class UProceduralMeshComponent* m_mesh;
+
+	UPROPERTY(EditAnywhere, Category = "Dissolve")
+		float m_speedDissolve = 0.001f;
 
 	UPROPERTY(EditAnywhere, Category = "Probability Distribution Relative")
 		float m_probabilitySpawnDefault = 0.2f;
@@ -190,8 +199,10 @@ protected:
 public:	
 
 
-	void increaseMaterialSaturation();
-	void decreaseMaterialSaturation();
+	void increaseMaterialDissolve();
+	void decreaseMaterialDissolve();
+	void setMaxCurrentThresholdDissolve();
+
 	float* getNumberTargets();
 	float* getNumberCompletedTargets();
  

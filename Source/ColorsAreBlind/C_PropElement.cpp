@@ -94,7 +94,8 @@ void AC_PropElement::setPropertiesProp(float radius, float radiusTrigger, float 
 		m_mesh->SetRelativeRotation(rotatorRandom);
 		if(!m_flatGround)
 			m_mesh->SetRelativeRotation(FQuat(FVector(0,1,0), PI/2));
-		FVector scale3D(random->FRandRange(0.85f, 1.15f));
+		//FVector scale3D(random->FRandRange(0.85f, 1.15f));
+		FVector scale3D(1.0f);
 		m_mesh->SetWorldScale3D(scale3D);
 		m_mesh->SetRelativeScale3D(scale3D);
 		SetActorScale3D(scale3D);
@@ -184,7 +185,8 @@ void AC_PropElement::Tick(float DeltaTime)
 			TArray<AActor*> actorsFound;
 			UGameplayStatics::GetAllActorsOfClass(GetWorld(), AC_LandscapeGenerator::StaticClass(), actorsFound);
 			AC_LandscapeGenerator* landscapeTemporary = (AC_LandscapeGenerator*) actorsFound[0];
-			landscapeTemporary->increaseMaterialSaturation();
+			landscapeTemporary->setMaxCurrentThresholdDissolve();
+			//landscapeTemporary->increaseMaterialSaturation();
 			landscapeTemporary->increaseCompletedTarget();
 			m_audioCompletedComponent->Play();
 			m_particlesCompleted->Activate();

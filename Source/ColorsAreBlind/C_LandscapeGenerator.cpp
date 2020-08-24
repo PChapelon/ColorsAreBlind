@@ -138,7 +138,7 @@ void AC_LandscapeGenerator::BeginPlay()
 		fillPropsRelative();
 
 	createSurfaceProps();
-	
+	m_materialDynamic->GetScalarParameterValue(FName(TEXT("dissolve")), m_currentThresholdDissolve);
 	
 }
 
@@ -148,6 +148,12 @@ void AC_LandscapeGenerator::BeginPlay()
 void AC_LandscapeGenerator::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (m_currentThresholdDissolve > m_maxCurrentThresholdDissolve)
+	{
+		increaseMaterialDissolve();
+	}
+
 
 	if (m_numberCompletedTargets >= m_numberTargets)
 	{
@@ -292,6 +298,8 @@ void AC_LandscapeGenerator::generateLandscape()
 
 	m_mesh->CreateMeshSection(0, m_vertices, m_triangles, m_normals, m_verticesTexture, m_vertexColors, tangents, true);
 	FString pathMaterial = "/Game/Materials/" + m_dataTemp.name + "/MainGround/" + m_dataTemp.nameCamelCase + "_MAT." + m_dataTemp.nameCamelCase + "_MAT";
+	UE_LOG(LogTemp, Warning, TEXT("Post material ini    %s "), *pathMaterial);
+
 	FStringAssetReference materialFinder(pathMaterial);
 	UMaterialInstance* materialObject = Cast<UMaterialInstance>( materialFinder.TryLoad());
 	m_materialDynamic = UMaterialInstanceDynamic::Create(materialObject, m_mesh);
@@ -322,7 +330,7 @@ void AC_LandscapeGenerator::fillPropsRelative()
 		}
 
 	}
-
+	UE_LOG(LogTemp, Warning, TEXT("prob1"));
 	FVector positionMain(FMath::TruncToFloat(m_random.FRandRange(0.0f, m_imageHeight)), FMath::TruncToFloat(m_random.FRandRange(0.0f, m_imageWidth)), 0.0f);
 
 	m_spawnProp = GetWorld()->SpawnActor<AC_PropElement>(AC_PropElement::StaticClass(), SpawnLocation);
@@ -345,6 +353,7 @@ void AC_LandscapeGenerator::fillPropsRelative()
 		}
 
 	
+	UE_LOG(LogTemp, Warning, TEXT("endmmain"));
 
 
 	for (unsigned int i = 0; i < m_imageHeight; i++)
@@ -361,6 +370,8 @@ void AC_LandscapeGenerator::fillPropsRelative()
 					
 					m_spawnProp = GetWorld()->SpawnActor<AC_PropElement>(AC_PropElement::StaticClass(), SpawnLocation); //Spawn an Actor at SpawnLocation
 					int randomModel = m_random.RandRange(0, m_dataTemp.subModelsMedium.Num() - 1);
+					UE_LOG(LogTemp, Warning, TEXT("prob1medium %d"), m_dataTemp.subModelsMedium.Num() - 1);
+
 					//UE_LOG(LogTemp, Warning, TEXT("%i     numberModels"), m_dataTemp.subModelsMedium.Num());
 					//UE_LOG(LogTemp, Warning, TEXT("%d     numberModels"), m_dataTemp.subModelsMedium.Num());
 					//Set properties of the model 
@@ -392,7 +403,9 @@ void AC_LandscapeGenerator::fillPropsRelative()
 				if (rand < probabilitySmallSpawn[i * m_imageWidth + j]) // Medium
 				{
 					m_spawnProp = GetWorld()->SpawnActor<AC_PropElement>(AC_PropElement::StaticClass(), SpawnLocation);
-					int randomModel = m_random.RandRange(0, m_dataTemp.subModelsMedium.Num() - 1);
+					int randomModel = m_random.RandRange(0, m_dataTemp.subModelsSmall.Num() - 1);
+					//UE_LOG(LogTemp, Warning, TEXT("prob1medium %d"), m_dataTemp.subModelsMedium.Num() - 1);
+
 					convertedRadius = conversionRelativeTriangleSize(m_dataTemp.subModelsSmall[randomModel].radius);
 					m_spawnProp->setPropertiesProp(convertedRadius, (convertedRadius - conversionRelativeTriangleSize(m_dataTemp.subModelsSmall[randomModel].subRadius)) * m_triangleSize, conversionRelativeTriangleSize(m_dataTemp.subModelsSmall[randomModel].subRadius), *m_dataTemp.subModelsSmall[randomModel].path, FVector(i, j, 0.0f), m_imageHeight, m_imageWidth, &m_random, m_dataTemp.subModelsSmall[randomModel].flat, false);
 					m_props.Add(m_spawnProp);
@@ -451,7 +464,7 @@ void AC_LandscapeGenerator::fillPropsPerlin()
 		
 	}
 
-
+	UE_LOG(LogTemp, Warning, TEXT("Perlin1"));
 	m_spawnProp = GetWorld()->SpawnActor<AC_PropElement>(AC_PropElement::StaticClass(), SpawnLocation);
 	float convertedRadius = conversionRelativeTriangleSize(m_dataTemp.mainModel.radius);
 	m_spawnProp->setPropertiesProp(convertedRadius, (convertedRadius - conversionRelativeTriangleSize(m_dataTemp.mainModel.subRadius)) * m_triangleSize, conversionRelativeTriangleSize(m_dataTemp.mainModel.subRadius), *m_dataTemp.mainModel.path, FVector(positionMain.X, positionMain.Y, 0.0f), m_imageHeight, m_imageWidth, &m_random);
@@ -466,6 +479,8 @@ void AC_LandscapeGenerator::fillPropsPerlin()
 	perlinX = initPerlinX;
 	perlinY = initPerlinY;
 
+	UE_LOG(LogTemp, Warning, TEXT("Perlin2"));
+
 	for (unsigned int i = 0; i < m_imageHeight; i++)
 	{
 		for (unsigned int j = 0; j < m_imageWidth; j++)
@@ -479,8 +494,12 @@ void AC_LandscapeGenerator::fillPropsPerlin()
 					//UE_LOG(LogTemp, Warning, TEXT("%f   %f   rarara"), rand, m_probabilityMedium);
 
 					//UE_LOG(LogTemp, Warning, TEXT("%f   %f   rand prob"), rand, m_probabilityMedium);
+					UE_LOG(LogTemp, Warning, TEXT("Perlin2medium"));
+
 					m_spawnProp = GetWorld()->SpawnActor<AC_PropElement>(AC_PropElement::StaticClass(), SpawnLocation);
 					int randomModel = m_random.RandRange(0, m_dataTemp.subModelsMedium.Num() - 1);
+					UE_LOG(LogTemp, Warning, TEXT("Perlin num medium %d"), m_dataTemp.subModelsMedium.Num());
+
 					convertedRadius = conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].radius);
 					m_spawnProp->setPropertiesProp(convertedRadius, (convertedRadius - conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].subRadius)) * m_triangleSize, conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].subRadius), *m_dataTemp.subModelsMedium[randomModel].path, FVector(i, j, 0.0f), m_imageHeight, m_imageWidth, &m_random, m_dataTemp.subModelsMedium[randomModel].flat, false);
 					m_props.Add(m_spawnProp);
@@ -496,8 +515,12 @@ void AC_LandscapeGenerator::fillPropsPerlin()
 				{
 					if (perlinValue > m_thresholdSmall && m_probabilitySmall > rand)
 					{
+						UE_LOG(LogTemp, Warning, TEXT("Perlin2Small"));
+
 						m_spawnProp = GetWorld()->SpawnActor<AC_PropElement>(AC_PropElement::StaticClass(), SpawnLocation);
 						int randomModel = m_random.RandRange(0, m_dataTemp.subModelsSmall.Num() - 1);
+						UE_LOG(LogTemp, Warning, TEXT("Perlin num small %d"), m_dataTemp.subModelsSmall.Num());
+
 						convertedRadius = conversionRelativeTriangleSize(m_dataTemp.subModelsSmall[randomModel].radius);
 						m_spawnProp->setPropertiesProp(convertedRadius, (convertedRadius - conversionRelativeTriangleSize(m_dataTemp.subModelsSmall[randomModel].subRadius)) * m_triangleSize, conversionRelativeTriangleSize(m_dataTemp.subModelsSmall[randomModel].subRadius), *m_dataTemp.subModelsSmall[randomModel].path, FVector(i, j, 0.0f), m_imageHeight, m_imageWidth, &m_random, m_dataTemp.subModelsSmall[randomModel].flat, false);
 						m_props.Add(m_spawnProp);
@@ -515,6 +538,8 @@ void AC_LandscapeGenerator::fillPropsPerlin()
 		perlinY = initPerlinY;
 		perlinX += m_placeProps;
 	}
+	UE_LOG(LogTemp, Warning, TEXT("Perlinend"));
+
 
 
 	delete[] placeAvailable;
@@ -688,23 +713,34 @@ float AC_LandscapeGenerator::conversionRelativeTriangleSize(float radius)
 	return FMath::RoundToFloat( radius * (m_REFERENCE_CIRCLE / static_cast<float>(m_triangleSize)));
 }
 
-void AC_LandscapeGenerator::increaseMaterialSaturation()
+void AC_LandscapeGenerator::increaseMaterialDissolve()
 {
-	float f; 
+	//float f; 
 	
-	m_materialDynamic->GetScalarParameterValue(FName(TEXT("desaturation")), f);
-	f -= (1.0f / m_numberTargets);
-	m_materialDynamic->SetScalarParameterValue(FName(TEXT("desaturation")), f);
+	//m_materialDynamic->GetScalarParameterValue(FName(TEXT("dissolve")), f);
+	m_currentThresholdDissolve -= m_speedDissolve;
+	m_materialDynamic->SetScalarParameterValue(FName(TEXT("dissolve")), m_currentThresholdDissolve);
 
 }
 
-void AC_LandscapeGenerator::decreaseMaterialSaturation()
+void AC_LandscapeGenerator::setMaxCurrentThresholdDissolve()
 {
 	float f;
-	m_materialDynamic->GetScalarParameterValue(FName(TEXT("desaturation")), f);
 
-	f += (1.0f / m_numberTargets);
-	m_materialDynamic->SetScalarParameterValue(FName(TEXT("desaturation")), f);
+	m_materialDynamic->GetScalarParameterValue(FName(TEXT("dissolve")), f);
+	f -= (1.5f / m_numberTargets);
+
+	m_maxCurrentThresholdDissolve = f;
+}
+
+void AC_LandscapeGenerator::decreaseMaterialDissolve()
+{
+	//float f;
+	//m_materialDynamic->GetScalarParameterValue(FName(TEXT("dissolve")), f);
+
+
+	m_currentThresholdDissolve += (1.5f / m_numberTargets);
+	m_materialDynamic->SetScalarParameterValue(FName(TEXT("dissolve")), m_currentThresholdDissolve);
 
 }
 
