@@ -32,7 +32,7 @@ void AC_HUD::DrawHUD()
 	if (m_landscape != nullptr)
 	{
 		float f = 5.0f;
-		str = "Monuments decouverts : ";
+		str = "Elements decouverts : ";
 		if (*m_completed >= *m_targetsTotal)
 		{
 			str += "termine";

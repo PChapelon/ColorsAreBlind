@@ -199,8 +199,9 @@ void AC_PropElement::Tick(float DeltaTime)
 			UGameplayStatics::GetAllActorsOfClass(GetWorld(), AC_LandscapeGenerator::StaticClass(), actorsFound);
 			AC_LandscapeGenerator* landscapeTemporary = (AC_LandscapeGenerator*) actorsFound[0];
 			landscapeTemporary->setMaxCurrentThresholdDissolve();
-			//landscapeTemporary->increaseMaterialSaturation();
+			landscapeTemporary->setMaxLightIntensity();
 			landscapeTemporary->increaseCompletedTarget();
+
 			m_audioCompletedComponent->Play();
 			m_particlesCompleted->Activate();
 

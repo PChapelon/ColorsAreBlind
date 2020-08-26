@@ -16,6 +16,8 @@
 #include "Math/Color.h"
 #include "Misc/Paths.h"
 #include "HAL/FileManagerGeneric.h"
+#include "Engine/DirectionalLight.h"
+#include "Components/DirectionalLightComponent.h"
 
 
 
@@ -144,6 +146,12 @@ void AC_LandscapeGenerator::BeginPlay()
 	createSurfaceProps();
 	m_materialDynamic->GetScalarParameterValue(FName(TEXT("dissolve")), m_currentThresholdDissolve);
 	
+	TArray<AActor*> actorsFound;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ADirectionalLight::StaticClass(), actorsFound);
+	ADirectionalLight* light = (ADirectionalLight*)actorsFound[0];
+	m_light = Cast<UDirectionalLightComponent>(light->GetComponentByClass(UDirectionalLightComponent::StaticClass()));
+	
+	
 }
 
 
@@ -156,6 +164,11 @@ void AC_LandscapeGenerator::Tick(float DeltaTime)
 	if (m_currentThresholdDissolve > m_maxCurrentThresholdDissolve)
 	{
 		increaseMaterialDissolve();
+	}
+
+	if (m_currentLightIntensity < m_maxLightIntensity)
+	{
+		increaseLightIntensity();
 	}
 
 
@@ -407,8 +420,8 @@ void AC_LandscapeGenerator::fillPropsRelative()
 		for (unsigned int j = 0; j < m_imageWidth; j++)
 		{
 			placeAvailable[i * m_imageWidth + j] = true;
-			probabilityMediumSpawn[i * m_imageWidth + j] = m_probabilitySpawnDefault;
-			probabilitySmallSpawn[i * m_imageWidth + j] = m_probabilitySpawnDefault + m_probabilityMedium;
+			probabilityMediumSpawn[i * m_imageWidth + j] = m_probabilitySpawnDefault + m_increaseProbabilityMedium;
+			probabilitySmallSpawn[i * m_imageWidth + j] = m_probabilitySpawnDefault + m_increaseProbabilitySmall;
 		}
 
 	}
@@ -429,13 +442,11 @@ void AC_LandscapeGenerator::fillPropsRelative()
 			if(FMath::Sqrt(FMath::Pow(i - m_spawnProp->getCenterPlacement().X, 2) + FMath::Pow(j - m_spawnProp->getCenterPlacement().Y, 2)) < smallRadius)
 				placeAvailable[i * m_imageWidth + j] = false;  //Unavailable to place a structure on point
 
-			probabilityMediumSpawn[i * m_imageWidth + j] = probabilityMediumSpawn[i * m_imageWidth + j] + (m_increaseProbabilityMedium * (2.0f / 3.0f));
-			//UE_LOG(LogTemp, Warning, TEXT("%f  %f   pr"), probabilityMediumSpawn[i * m_imageWidth + j], m_increaseProbabilityMedium * (1.0f / 3.0f));
-			probabilitySmallSpawn[i * m_imageWidth + j] += m_increaseProbabilityMedium * (2.0f / 3.0f);
+			probabilityMediumSpawn[i * m_imageWidth + j] = probabilityMediumSpawn[i * m_imageWidth + j] + m_addingNearMain;
+			probabilitySmallSpawn[i * m_imageWidth + j] = probabilitySmallSpawn[i * m_imageWidth + j] + m_addingNearMain;
 		}
 
 	
-	UE_LOG(LogTemp, Warning, TEXT("endmmain"));
 
 
 	for (unsigned int i = 0; i < m_imageHeight; i++)
@@ -445,17 +456,16 @@ void AC_LandscapeGenerator::fillPropsRelative()
 			if (placeAvailable[i * m_imageWidth + j])
 			{
 				float rand = m_random.FRandRange(0.0f, 100.0f);
-				//UE_LOG(LogTemp, Warning, TEXT("%f   %f   rand"), rand, probabilityMediumSpawn[i * m_imageWidth + j]);
+				//probabilitySmallSpawn[i * m_imageWidth + j] += m_increaseProbabilitySmall;
+
+
 				if ( rand < probabilityMediumSpawn[i * m_imageWidth + j] ) // Medium
 				{
 
 					
 					m_spawnProp = GetWorld()->SpawnActor<AC_PropElement>(AC_PropElement::StaticClass(), SpawnLocation); //Spawn an Actor at SpawnLocation
 					int randomModel = m_random.RandRange(0, m_dataTemp.subModelsMedium.Num() - 1);
-					UE_LOG(LogTemp, Warning, TEXT("prob1medium %d"), m_dataTemp.subModelsMedium.Num() - 1);
 
-					//UE_LOG(LogTemp, Warning, TEXT("%i     numberModels"), m_dataTemp.subModelsMedium.Num());
-					//UE_LOG(LogTemp, Warning, TEXT("%d     numberModels"), m_dataTemp.subModelsMedium.Num());
 					//Set properties of the model 
 					convertedRadius = conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].radius);
 					m_spawnProp->setPropertiesProp(convertedRadius, (convertedRadius - conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].subRadius)) * m_triangleSize, conversionRelativeTriangleSize(m_dataTemp.subModelsMedium[randomModel].subRadius), *m_dataTemp.subModelsMedium[randomModel].path, FVector(i, j, 0.0f), m_imageHeight, m_imageWidth, &m_random, m_dataTemp.subModelsMedium[randomModel].flat, false);
@@ -467,7 +477,7 @@ void AC_LandscapeGenerator::fillPropsRelative()
 						{
 							if (FMath::Sqrt(FMath::Pow(i - m_spawnProp->getCenterPlacement().X, 2) + FMath::Pow(j - m_spawnProp->getCenterPlacement().Y, 2)) < smallRadius)
 								placeAvailable[i * m_imageWidth + j] = false;  //Unavailable to place a structure on point
-							probabilitySmallSpawn[i * m_imageWidth + j] += m_increaseProbabilitySmall * (2.0f / 3.0f);
+							probabilitySmallSpawn[i * m_imageWidth + j] += m_addingNearMedium ;
 						}
 				}
 			}
@@ -849,6 +859,17 @@ void AC_LandscapeGenerator::setMaxCurrentThresholdDissolve()
 	f -= (1.5f / m_numberTargets);
 
 	m_maxCurrentThresholdDissolve = f;
+}
+
+void AC_LandscapeGenerator::increaseLightIntensity()
+{
+	m_currentLightIntensity += m_speedLightChange;
+	m_light->SetIntensity(m_currentLightIntensity);
+}
+
+void AC_LandscapeGenerator::setMaxLightIntensity()
+{
+	m_maxLightIntensity += (10.0f / m_numberTargets);
 }
 
 void AC_LandscapeGenerator::decreaseMaterialDissolve()

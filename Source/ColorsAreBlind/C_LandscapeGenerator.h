@@ -61,6 +61,15 @@ private:
 
 	UPROPERTY()
 		float m_maxCurrentThresholdDissolve = 1.5f;
+
+	UPROPERTY()
+		float m_currentLightIntensity = 0.1f;
+
+	UPROPERTY()
+		float m_maxLightIntensity = 0.01f;
+
+	UPROPERTY()
+		float m_speedLightChange = 0.01f;
 	
 public:	
 	// Sets default values for this actor's properties
@@ -87,6 +96,12 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Probability Distribution Relative")
 		float m_increaseProbabilitySmall = 0.3f;
+
+	UPROPERTY(EditAnywhere, Category = "Probability Distribution Relative")
+		float m_addingNearMain = 0.2f;
+
+	UPROPERTY(EditAnywhere, Category = "Probability Distribution Relative")
+		float m_addingNearMedium = 0.2f;
 	
 	UPROPERTY(EditAnywhere, Category = "Probability Distribution Relative")
 		bool m_usePerlinProb = true;
@@ -171,6 +186,9 @@ public:
 
 	UPROPERTY()
 		TArray<AC_PropElement*> m_props;
+	
+	UPROPERTY()
+		class UDirectionalLightComponent* m_light;
 
 	UPROPERTY()
 		FRandomStream m_random;
@@ -224,6 +242,9 @@ public:
 	void increaseMaterialDissolve();
 	void decreaseMaterialDissolve();
 	void setMaxCurrentThresholdDissolve();
+
+	void increaseLightIntensity();
+	void setMaxLightIntensity();
 
 	float* getNumberTargets();
 	float* getNumberCompletedTargets();
