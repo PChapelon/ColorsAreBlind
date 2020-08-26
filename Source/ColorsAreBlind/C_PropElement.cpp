@@ -58,6 +58,7 @@ AC_PropElement::AC_PropElement()
 	}
 	//m_particlesCompleted->Template = m_particlesToAffect;
 	m_particlesCompleted->Deactivate();
+	m_dynamicMaterialArray.Empty();
 
 	
 }
@@ -100,14 +101,22 @@ void AC_PropElement::setPropertiesProp(float radius, float radiusTrigger, float 
 		m_mesh->SetRelativeScale3D(scale3D);
 		SetActorScale3D(scale3D);
 	}
-
-	m_dynamicMaterial = UMaterialInstanceDynamic::Create(m_mesh->GetMaterial(0), this);
-	m_mesh->SetMaterial(0, m_dynamicMaterial);
+	for (int i = 0; i < m_mesh->GetNumMaterials(); i++)
+	{
+		m_dynamicMaterialArray.Add(UMaterialInstanceDynamic::Create(m_mesh->GetMaterial(i), this));
+		m_mesh->SetMaterial(i, m_dynamicMaterialArray[i]);
+	}
+	//m_dynamicMaterial = UMaterialInstanceDynamic::Create(m_mesh->GetMaterial(0), this);
+	
+	//m_mesh->SetMaterial(0, m_dynamicMaterial);
 
 	
 	if (!m_flatGround)
 	{
-		m_dynamicMaterial->SetScalarParameterValue(FName(TEXT("desaturation")), 0.0f);
+		for (int i = 0; i < m_mesh->GetNumMaterials(); i++)
+		{
+			m_dynamicMaterialArray[i]->SetScalarParameterValue(FName(TEXT("desaturation")), 0.0f);
+		}
 		m_isCompleted = true;
 	}
 	else
@@ -173,10 +182,14 @@ void AC_PropElement::Tick(float DeltaTime)
 	if (!m_isCompleted && m_isInside )
 	{
 		float f;
-		m_dynamicMaterial->GetScalarParameterValue(FName(TEXT("desaturation")), f);
+		m_dynamicMaterialArray[0]->GetScalarParameterValue(FName(TEXT("desaturation")), f);
 
 		f -= 0.01f;
-		m_dynamicMaterial->SetScalarParameterValue(FName(TEXT("desaturation")), f);
+
+		for (int i = 0; i < m_mesh->GetNumMaterials(); i++)
+		{
+			m_dynamicMaterialArray[i]->SetScalarParameterValue(FName(TEXT("desaturation")), f);
+		}
 
 
 		if (f <= 0.0f)

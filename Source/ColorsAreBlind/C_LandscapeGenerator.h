@@ -73,6 +73,8 @@ public:
 
 	UPROPERTY(EditAnywhere, Category="Mesh")
 		class UProceduralMeshComponent* m_mesh;
+	UPROPERTY()
+		class UProceduralMeshComponent* m_meshAround;
 
 	UPROPERTY(EditAnywhere, Category = "Dissolve")
 		float m_speedDissolve = 0.001f;
@@ -176,6 +178,9 @@ public:
 	UPROPERTY()
 		float m_REFERENCE_CIRCLE = 50.0f;
 
+	UPROPERTY(EditAnywhere, Category = "Mesh")
+		float m_widthPlane = 150.0f;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -187,9 +192,26 @@ protected:
 	TArray<FVector> m_vertices;
 	TArray<FVector> m_normals;
 	TArray<int32> m_triangles;
+
 	TArray<FVector2D> m_verticesTexture;
 
 	TArray<FColor> m_vertexColors;
+
+	TArray<FVector> m_verticesAroundFace;
+	TArray<FVector> m_verticesAroundLeft;
+	TArray<FVector> m_verticesAroundRight;
+
+	TArray<FVector> m_normalsAroundFace;
+	TArray<FVector> m_normalsAroundLeft;
+	TArray<FVector> m_normalsAroundRight;
+
+	TArray<int32> m_trianglesAroundFace;
+	TArray<int32> m_trianglesAroundLeft;
+	TArray<int32> m_trianglesAroundRight;
+
+	TArray<FVector2D> m_verticesTextureAroundFace;
+	TArray<FVector2D> m_verticesTextureAroundLeft;
+	TArray<FVector2D> m_verticesTextureAroundRight;
 
 	float* m_heightMap;
 	int32* m_distributionMap;

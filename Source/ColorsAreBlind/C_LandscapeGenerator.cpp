@@ -104,6 +104,10 @@ AC_LandscapeGenerator::AC_LandscapeGenerator()
 	RootComponent = m_mesh;
 	m_mesh->bUseAsyncCooking = true;
 
+	m_meshAround = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("GeneratedMeshAround"));
+	m_meshAround->SetupAttachment(m_mesh);
+	m_meshAround->bUseAsyncCooking = true;
+
 	m_heightMap = new float[m_imageHeight * m_imageWidth];
 
 	m_seed = FMath::RandRange(0, 99999999);
@@ -232,6 +236,23 @@ void AC_LandscapeGenerator::generateLandscape()
 			float z = FMath::PerlinNoise2D(FVector2D(perlinX,perlinY)) * amplitude;
 			m_heightMap[i * m_imageWidth + j ] = z;
 
+			if (i == 0)
+			{
+				m_verticesAroundFace.Add(FVector(x, y, z));
+				m_verticesAroundFace.Add(FVector(x, y, z - m_widthPlane));
+			}
+			if (j == 0)
+			{
+				m_verticesAroundLeft.Add(FVector(x, y, z));
+				m_verticesAroundLeft.Add(FVector(x, y, z - m_widthPlane));
+			}
+			if (j == m_imageWidth - 1)
+			{
+				m_verticesAroundRight.Add(FVector(x, y, z));
+				m_verticesAroundRight.Add(FVector(x, y, z - m_widthPlane));
+			}
+
+
 
 			m_vertices.Add(FVector(x, y, z));
 			
@@ -256,6 +277,7 @@ void AC_LandscapeGenerator::generateLandscape()
 			m_triangles.Add(j + (m_imageWidth * i));
 			m_triangles.Add( (j+1) + (m_imageWidth * i) );
 			m_triangles.Add( j + (m_imageWidth * (i + 1 )));
+
 			
 			FVector v1 = FVector(coordX, coordY + distance, m_heightMap[(i * m_imageWidth ) + (j + 1)]) - FVector(coordX, coordY, m_heightMap[i * m_imageWidth + j]);
 			FVector v2 = FVector(coordX + distance, coordY, m_heightMap[ (i + 1) * m_imageWidth + j]) - FVector(coordX, coordY, m_heightMap[i * m_imageWidth + j]);
@@ -275,7 +297,43 @@ void AC_LandscapeGenerator::generateLandscape()
 			normalsFaces[i * m_imageWidth + (j + 1)] = normalsFaces[i * m_imageWidth + (j + 1)] + n2;
 			normalsFaces[(i + 1) * m_imageWidth + j] = normalsFaces[(i + 1) * m_imageWidth + j]  + n2;
 			normalsFaces[(i + 1) * m_imageWidth + (j+1)] = normalsFaces[(i + 1) * m_imageWidth + (j + 1)] + n2;
+
+
+			
 		}
+	}
+
+	for (unsigned int k = 0; k < m_imageHeight * 2; k+=2)
+	{
+		m_trianglesAroundFace.Add(k);
+		m_trianglesAroundFace.Add(k + 1);
+		m_trianglesAroundFace.Add(k + 2);
+
+		m_trianglesAroundFace.Add(k + 1);
+		m_trianglesAroundFace.Add(k + 3);
+		m_trianglesAroundFace.Add(k + 2);
+
+
+	}
+
+	for (unsigned int k = 0; k < m_imageWidth * 2; k += 2)
+	{
+		m_trianglesAroundLeft.Add(k);
+		m_trianglesAroundLeft.Add(k + 2);
+		m_trianglesAroundLeft.Add(k + 1);
+
+		m_trianglesAroundLeft.Add(k + 1);
+		m_trianglesAroundLeft.Add(k + 2);
+		m_trianglesAroundLeft.Add(k + 3);
+
+		m_trianglesAroundRight.Add(k);
+		m_trianglesAroundRight.Add(k + 1);
+		m_trianglesAroundRight.Add(k + 2);
+
+		m_trianglesAroundRight.Add(k + 1);
+		m_trianglesAroundRight.Add(k + 3);
+		m_trianglesAroundRight.Add(k + 2);
+
 	}
 
 
@@ -291,23 +349,47 @@ void AC_LandscapeGenerator::generateLandscape()
 			FVector vec = normalsFaces[i * m_imageWidth + j] ;
 			vec.Normalize();
 			m_normals.Add(vec);
+
+			if (i == 0)
+			{
+				m_normalsAroundFace.Add(FVector(-1, 0, 0));
+				m_normalsAroundFace.Add(FVector(-1, 0, 0));
+
+				float xText = j / static_cast<float>(m_imageWidth - 1);
+				
+
+				m_verticesTextureAroundFace.Add(FVector2D(xText, 0.0f));
+				m_verticesTextureAroundFace.Add(FVector2D(xText, 1.0f / static_cast<float>(m_imageWidth - 1)));
+			}
+
+			if (j == 0)
+			{
+				m_normalsAroundLeft.Add(FVector(0, -1, 0));
+				m_normalsAroundLeft.Add(FVector(0, -1, 0));
+
+				float xText = i / static_cast<float>(m_imageHeight - 1);
+
+				m_verticesTextureAroundLeft.Add(FVector2D(xText, 0.0f));
+				m_verticesTextureAroundLeft.Add(FVector2D(xText, 1.0f / static_cast<float>(m_imageWidth - 1)));
+			}
+
+			if (j == m_imageWidth - 1)
+			{
+				m_normalsAroundRight.Add(FVector(0, 1, 0));
+				m_normalsAroundRight.Add(FVector(0, 1, 0));
+
+				float xText = i / static_cast<float>(m_imageHeight - 1);
+
+				m_verticesTextureAroundRight.Add(FVector2D(xText, 0.0f));
+				m_verticesTextureAroundRight.Add(FVector2D(xText, 1.0f / static_cast<float>(m_imageWidth - 1)));
+			}
 		}
 	}
 
 	TArray<FProcMeshTangent> tangents;
 
 	m_mesh->CreateMeshSection(0, m_vertices, m_triangles, m_normals, m_verticesTexture, m_vertexColors, tangents, true);
-	FString pathMaterial = "/Game/Materials/" + m_dataTemp.name + "/MainGround/" + m_dataTemp.nameCamelCase + "_MAT." + m_dataTemp.nameCamelCase + "_MAT";
-	UE_LOG(LogTemp, Warning, TEXT("Post material ini    %s "), *pathMaterial);
-
-	FStringAssetReference materialFinder(pathMaterial);
-	UMaterialInstance* materialObject = Cast<UMaterialInstance>( materialFinder.TryLoad());
-	m_materialDynamic = UMaterialInstanceDynamic::Create(materialObject, m_mesh);
-
 	
-
-	
-	m_mesh->SetMaterial(0, m_materialDynamic);
 	
 	delete[] normalsFaces;
 }
@@ -614,7 +696,16 @@ void AC_LandscapeGenerator::createSurfaceProps()
 							float coef = radius - FMath::TruncToFloat(FMath::Sqrt(d));
 							float z = m_vertices[index].Z + ((averageValue - m_vertices[index].Z) * (coef / gradientLevel));
 							float r = 255.0f * (coef / gradientLevel);
-							m_vertexColors[index] = FColor(r, 0, 0, 0);
+						/*	if (m_vertexColors[index].R == 0.0f)
+								m_vertexColors[index] = FColor(r, 0, 0, 0);
+							else 
+								if(m_vertexColors[index].R != 255.0f)
+									m_vertexColors[index] = FColor((r + m_vertexColors[index].R ) / 2.0f, 0, 0, 0);*/
+							//m_vertexColors[index] = FColor((m_vertexColors[index].R + m_random.FRandRange(50.0f, 255.0f)) / 2.0f, 0, 0, 0);
+
+							//m_vertexColors[index] = FColor(r, 0, 0, 0);
+							if(m_vertexColors[index].R <= r || m_vertexColors[index].R == 0.0f)
+								m_vertexColors[index] = FColor(r, 0, 0, 0); 
 
 							m_vertices[index] = FVector(m_vertices[index].X, m_vertices[index].Y, z);
 
@@ -623,8 +714,12 @@ void AC_LandscapeGenerator::createSurfaceProps()
 						}
 						else
 						{
-
-							m_vertexColors[index] = FColor(255, 0, 0, 0);
+							/*if (m_vertexColors[index].R == 0)
+								m_vertexColors[index] = FColor(255.0f, 0, 0, 0);
+							else
+								m_vertexColors[index] = FColor(FMath::Clamp(255.0f + m_vertexColors[index].R, 0.0f, 255.0f), 0, 0, 0);*/
+							
+							m_vertexColors[index] = FColor(255.0f, 0, 0, 0);
 
 							m_vertices[index] = FVector(m_vertices[index].X, m_vertices[index].Y, averageValue);
 							m_heightMap[index] = averageValue;
@@ -705,7 +800,30 @@ void AC_LandscapeGenerator::createSurfaceProps()
 	TArray<FProcMeshTangent> tangents;
 	m_mesh->ClearAllMeshSections();
 	m_mesh->CreateMeshSection(0, m_vertices, m_triangles, m_normals, m_verticesTexture, m_vertexColors, tangents, true);
-	
+
+	m_meshAround->ClearAllMeshSections();
+	m_meshAround->CreateMeshSection(0, m_verticesAroundFace, m_trianglesAroundFace, m_normalsAroundFace, m_verticesTextureAroundFace, TArray<FColor>(), TArray<FProcMeshTangent>(), true);
+	m_meshAround->CreateMeshSection(1, m_verticesAroundLeft, m_trianglesAroundLeft, m_normalsAroundLeft, m_verticesTextureAroundLeft, TArray<FColor>(), tangents, true);
+	m_meshAround->CreateMeshSection(2, m_verticesAroundRight, m_trianglesAroundRight, m_normalsAroundRight, m_verticesTextureAroundRight, TArray<FColor>(), tangents, true);
+
+	FString pathMaterial = "/Game/Materials/" + m_dataTemp.name + "/MainGround/" + m_dataTemp.nameCamelCase + "_MAT." + m_dataTemp.nameCamelCase + "_MAT";
+
+	//FString pathMaterial = "/Game/Materials/" + m_dataTemp.name + "/MainGround/" + m_dataTemp.nameCamelCase + "_Around_MAT." + m_dataTemp.nameCamelCase + "_Around_MAT";
+
+	FStringAssetReference materialFinder(pathMaterial);
+	UMaterialInstance* materialObject = Cast<UMaterialInstance>(materialFinder.TryLoad());
+
+
+
+
+	m_meshAround->SetMaterial(0, UMaterialInstanceDynamic::Create(materialObject, m_mesh));
+
+	/*UE_LOG(LogTemp, Warning, TEXT("Post material ini    %s "), *pathMaterial);
+
+	FStringAssetReference materialFinder(pathMaterial);
+	UMaterialInstance* materialObject = Cast<UMaterialInstance>(materialFinder.TryLoad());*/
+	m_materialDynamic = UMaterialInstanceDynamic::Create(materialObject, m_mesh);
+	m_mesh->SetMaterial(0, m_materialDynamic);
 }
 
 float AC_LandscapeGenerator::conversionRelativeTriangleSize(float radius)

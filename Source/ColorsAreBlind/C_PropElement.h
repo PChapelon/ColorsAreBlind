@@ -44,6 +44,9 @@ public:
 	UPROPERTY(EditAnywhere, Category="Material")
 		class UMaterialInstanceDynamic* m_dynamicMaterial;
 
+	UPROPERTY()
+		TArray<UMaterialInstanceDynamic*> m_dynamicMaterialArray;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger")
 		class UParticleSystemComponent* m_particlesCompleted;
 
