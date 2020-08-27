@@ -37,8 +37,8 @@ AC_LandscapeGenerator::AC_LandscapeGenerator()
 
 	//Init data 
 	m_worldDatas.Add(WorldType::DESERT, { FString("DESERT"), FString("Desert"), 450.0f, 500.0f, 0.005f, 0.01f, 0.2f, 0.5f, 0.2f, FWorldModel(), {}, {} });
-	m_worldDatas.Add(WorldType::BANQUISE, { FString("BANQUISE"), FString("Banquise"), 20.0f, 40.0f, 0.005f, 0.01f, 1.0f, 0.5f, 0.2f, FWorldModel(), {}, {} });
-	m_worldDatas.Add(WorldType::FORET, { FString("FORET"), FString("Foret"), 50.0f, 100.0f, 0.005f, 0.01f, 1.0f, 0.5f, 0.2f, FWorldModel(), {}, {} });
+	m_worldDatas.Add(WorldType::BANQUISE, { FString("BANQUISE"), FString("Banquise"), 50.0f, 120.0f, 0.005f, 0.01f, 1.0f, 0.5f, 0.2f, FWorldModel(), {}, {} });
+	m_worldDatas.Add(WorldType::FORET, { FString("FORET"), FString("Foret"), 10.0f, 200.0f, 0.005f, 0.01f, 1.0f, 0.5f, 0.2f, FWorldModel(), {}, {} });
 
 	
 	
