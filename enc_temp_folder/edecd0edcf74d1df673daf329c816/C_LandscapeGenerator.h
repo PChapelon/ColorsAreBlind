@@ -36,11 +36,6 @@ public:
 	FString nameCamelCase;
 	float amplitudeMin;
 	float amplitudeMax;
-	float defaultProbability;
-	float increaseMedium;
-	float increaseSmall;
-	float addingNearMain;
-	float addingNearMedium;
 	FWorldModel mainModel;
 	TArray<FWorldModel> subModelsMedium;
 	TArray<FWorldModel> subModelsSmall;

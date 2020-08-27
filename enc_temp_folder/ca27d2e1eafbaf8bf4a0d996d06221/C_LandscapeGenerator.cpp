@@ -36,9 +36,9 @@ AC_LandscapeGenerator::AC_LandscapeGenerator()
 
 
 	//Init data 
-	m_worldDatas.Add(WorldType::DESERT, { FString("DESERT"), FString("Desert"), 450.0f, 500.0f, 0.005f, 0.01f, 0.2f, 0.5f, 0.2f, FWorldModel(), {}, {} });
-	m_worldDatas.Add(WorldType::BANQUISE, { FString("BANQUISE"), FString("Banquise"), 20.0f, 40.0f, 0.005f, 0.01f, 1.0f, 0.5f, 0.2f, FWorldModel(), {}, {} });
-	m_worldDatas.Add(WorldType::FORET, { FString("FORET"), FString("Foret"), 50.0f, 100.0f, 0.005f, 0.01f, 1.0f, 0.5f, 0.2f, FWorldModel(), {}, {} });
+	m_worldDatas.Add(WorldType::DESERT, { FString("DESERT"), FString("Desert"), 450.0f, 500.0f, FWorldModel(), {}, {} });
+	m_worldDatas.Add(WorldType::BANQUISE, { FString("BANQUISE"), FString("Banquise"), 20.0f, 50.0f, FWorldModel(), {}, {} });
+	m_worldDatas.Add(WorldType::FORET, { FString("FORET"), FString("Foret"), 50.0f, 100.0f, FWorldModel(), {}, {} });
 
 	
 	
@@ -138,7 +138,6 @@ void AC_LandscapeGenerator::BeginPlay()
 	m_vertexColors.Empty();
 
 	generateLandscape();
-	
 	if (m_usePerlinProb)
 		fillPropsPerlin();
 	else
@@ -415,13 +414,6 @@ void AC_LandscapeGenerator::fillPropsRelative()
 	bool* placeAvailable = new bool[m_imageWidth * m_imageHeight];
 	float* probabilityMediumSpawn = new float[m_imageWidth * m_imageHeight];
 	float* probabilitySmallSpawn = new float[m_imageWidth * m_imageHeight];
-
-
-	m_probabilitySpawnDefault = m_dataTemp.defaultProbability;
-	m_increaseProbabilityMedium = m_dataTemp.increaseMedium;
-	m_increaseProbabilitySmall = m_dataTemp.increaseSmall;
-	m_addingNearMain = m_dataTemp.addingNearMain;
-	m_addingNearMedium = m_dataTemp.addingNearMedium;
 
 	for (unsigned int i = 0; i < m_imageHeight; i++)
 	{
