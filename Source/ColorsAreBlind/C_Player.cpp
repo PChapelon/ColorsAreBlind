@@ -128,11 +128,11 @@ void AC_Player::Tick(float DeltaTime)
 	}
 
 	//FVector* animationVector = &m_meshContainer->GetRelativeLocation();
-	FVector animationVector = m_meshContainer->GetRelativeLocation();
-	animationVector.Z = FMath::Cos(m_animationDelta) * 50.0f;
+	//FVector animationVector = m_meshContainer->GetRelativeLocation();
+	//animationVector.Z = FMath::Cos(m_animationDelta) * 50.0f;
 
-	m_meshContainer->SetRelativeLocation(animationVector);
-	m_animationDelta += 0.1f * m_speedAnimation;
+//	m_meshContainer->SetRelativeLocation(animationVector);
+	//m_animationDelta += 0.1f * m_speedAnimation;
 
 
 	//delete animationVector;
